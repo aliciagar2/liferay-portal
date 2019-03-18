@@ -22,19 +22,16 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.util.FileImpl;
-
-import java.io.ByteArrayInputStream;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+
+import java.io.ByteArrayInputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Alicia García
@@ -72,7 +69,9 @@ public class GoogleCloudNaturalLanguageUtilTest {
 
 		List<String> actual =
 			GoogleCloudNaturalLanguageUtil.splitTextToMaxSizeCall(
-				_fileVersion, 5000);
+				new String(
+					FileUtil.getBytes(_fileVersion.getContentStream(false))),
+				5000, PLAIN_TEXT_TYPE);
 
 		List<String> expected = new ArrayList<>();
 
