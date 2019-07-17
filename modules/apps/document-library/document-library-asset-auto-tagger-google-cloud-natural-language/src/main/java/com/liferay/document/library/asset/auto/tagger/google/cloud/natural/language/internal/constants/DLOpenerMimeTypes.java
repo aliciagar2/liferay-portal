@@ -12,7 +12,7 @@
  * details.
  */
 
-package com.liferay.document.library.opener.drive.constants;
+package com.liferay.document.library.opener.constants;
 
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.ContentTypes;
@@ -22,14 +22,15 @@ import java.util.Map;
 
 /**
  * Provides a set of constants and methods for working with the MIME types
- * supported by Liferay and Google Drive.
+ * supported by Liferay.
  *
  * See https://developers.google.com/drive/api/v3/manage-downloads.
  *
  * @author Adolfo Pérez
+ * @author Alicia García
  * @review
  */
-public class DLOpenerDriveMimeTypes {
+public class DLOpenerMimeTypes {
 
 	/**
 	 * The MIME type for Rich Text files.
@@ -40,6 +41,8 @@ public class DLOpenerDriveMimeTypes {
 
 	/**
 	 * The MIME type for Microsoft Word (docx) documents.
+	 *
+	 * @review
 	 */
 	public static final String APPLICATION_VND_DOCX =
 		"application/vnd.openxmlformats-officedocument.wordprocessingml." +
@@ -47,24 +50,32 @@ public class DLOpenerDriveMimeTypes {
 
 	/**
 	 * The MIME type for Open Document (odp) presentations.
+	 *
+	 * @review
 	 */
 	public static final String APPLICATION_VND_ODP =
 		"application/vnd.oasis.opendocument.presentation";
 
 	/**
 	 * The MIME type for Open Document (ods) spreadsheets.
+	 *
+	 * @review
 	 */
 	public static final String APPLICATION_VND_ODS =
 		"application/vnd.oasis.opendocument.spreadsheet";
 
 	/**
 	 * The MIME type for Open Document (odt) documents.
+	 *
+	 * @review
 	 */
 	public static final String APPLICATION_VND_ODT =
 		"application/vnd.oasis.opendocument.text";
 
 	/**
 	 * The MIME type for Microsoft PowerPoint (pptx) presentations.
+	 *
+	 * @review
 	 */
 	public static final String APPLICATION_VND_PPTX =
 		"application/vnd.openxmlformats-officedocument.presentationml." +
@@ -72,12 +83,16 @@ public class DLOpenerDriveMimeTypes {
 
 	/**
 	 * The MIME type for Microsoft Excel (xslx) spreadsheets.
+	 *
+	 * @review
 	 */
 	public static final String APPLICATION_VND_XSLX =
 		"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
 	/**
 	 * The MIME type for Tab Separated Values files.
+	 *
+	 * @review
 	 */
 	public static final String TEXT_TAB_SEPARATED_VALUES =
 		"text/tab-separated-values";
@@ -103,15 +118,10 @@ public class DLOpenerDriveMimeTypes {
 	 * first character.
 	 * </p>
 	 *
-	 * <p>
-	 * Only MIME types for which the {@link #isMimeTypeSupported(String)} method
-	 * returns {@code true} return an extension. Any empty string is returned
-	 * for any others.
-	 * </p>
-	 *
 	 * @param  mimeType the MIME type
 	 * @return the canonical extension, or an empty string if none could be
 	 *         determined
+	 * @review
 	 */
 	public static String getMimeTypeExtension(String mimeType) {
 		return extensions.getOrDefault(mimeType, StringPool.BLANK);
