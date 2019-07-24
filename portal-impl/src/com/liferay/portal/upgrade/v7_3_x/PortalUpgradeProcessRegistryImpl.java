@@ -31,6 +31,11 @@ public class PortalUpgradeProcessRegistryImpl
 		TreeMap<Version, UpgradeProcess> upgradeProcesses) {
 
 		upgradeProcesses.put(new Version(6, 0, 0), new UpgradeSchema());
+
+		upgradeProcesses.put(new Version(6, 0, 1), new UpgradeLayout());
+
+		upgradeProcesses.put(new Version(6, 0, 2), new UpgradeLayoutSet());
+
 	}
 
 }
