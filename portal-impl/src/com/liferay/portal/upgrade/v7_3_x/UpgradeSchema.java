@@ -12,18 +12,37 @@
  * details.
  */
 
-package com.liferay.portal.upgrade.v7_3_x;
+package com.liferay.layout.seo.kernel;
 
-import com.liferay.portal.kernel.upgrade.UpgradeProcess;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.Layout;
+
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 /**
- * @author Alicia García
+ * @author Cristina González
  */
-public class UpgradeSchema extends UpgradeProcess {
+public interface LayoutSEOLinkManager {
 
-	@Override
-	protected void doUpgrade() throws Exception {
-		upgrade(new UpgradeMVCCVersion());
+	public default LayoutSEOLink getCanonicalLayoutSEOLink(
+			Layout layout, Locale locale, String canonicalURL,
+			Map<Locale, String> alternateURLs)
+		throws PortalException {
+
+		throw new UnsupportedOperationException();
+	}
+
+	public List<LayoutSEOLink> getLocalizedLayoutSEOLinks(
+			Layout layout, Locale locale, String canonicalURL,
+			Map<Locale, String> alternateURLs)
+		throws PortalException;
+
+	public default boolean isOpenGraphEnabled(Layout layout)
+		throws PortalException {
+
+		return false;
 	}
 
 }
