@@ -15,14 +15,22 @@
 package com.liferay.layout.seo.web.internal.servlet.taglib;
 
 import com.liferay.layout.seo.kernel.LayoutSEOLink;
-import com.liferay.layout.seo.kernel.LayoutSEOLinkManagerUtil;
+import com.liferay.layout.seo.kernel.LayoutSEOLinkManager;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.model.Company;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.servlet.taglib.BaseDynamicInclude;
 import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.HtmlUtil;
+import com.liferay.portal.kernel.util.ListMergeable;
+import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
@@ -38,6 +46,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Alicia García
@@ -59,30 +68,62 @@ public class OpenGraphTopHeadDynamicInclude extends BaseDynamicInclude {
 
 		try {
 			if (!themeDisplay.isSignedIn() && layout.isPublicLayout()) {
-				String completeURL = PortalUtil.getCurrentCompleteURL(
+				String completeURL = _portal.getCurrentCompleteURL(
 					httpServletRequest);
 
-				String canonicalURL = PortalUtil.getCanonicalURL(
+				String canonicalURL = _portal.getCanonicalURL(
 					completeURL, themeDisplay, layout, false, false);
 
 				Map<Locale, String> alternateURLs = Collections.emptyMap();
 
-				Set<Locale> availableLocales = LanguageUtil.getAvailableLocales(
+				Set<Locale> availableLocales = _language.getAvailableLocales(
 					themeDisplay.getSiteGroupId());
 
 				if (availableLocales.size() > 1) {
-					alternateURLs = PortalUtil.getAlternateURLs(
+					alternateURLs = _portal.getAlternateURLs(
 						canonicalURL, themeDisplay, layout);
 				}
 
 				PrintWriter printWriter = httpServletResponse.getWriter();
 
 				for (LayoutSEOLink layoutSEOLink :
-						LayoutSEOLinkManagerUtil.getLocalizedLayoutSEOLinks(
-							layout, PortalUtil.getLocale(httpServletRequest),
+						_layoutSEOLinkManager.getLocalizedLayoutSEOLinks(
+							layout, _portal.getLocale(httpServletRequest),
 							canonicalURL, alternateURLs)) {
 
 					printWriter.println(_addLinkTag(layoutSEOLink));
+				}
+
+				if (_layoutSEOLinkManager.isOpenGraphEnabled(layout)) {
+					Group group = layout.getGroup();
+					LayoutSEOLink layoutSEOLink =
+						_layoutSEOLinkManager.getCanonicalLayoutSEOLink(
+							layout, themeDisplay.getLocale(), canonicalURL,
+							alternateURLs);
+
+					printWriter.println(
+						_getOpenGraphTag(
+							"og:description",
+							layout.getDescription(
+								themeDisplay.getLanguageId())));
+					printWriter.println(
+						_getOpenGraphTag(
+							"og:locale", themeDisplay.getLanguageId()));
+
+					availableLocales.forEach(
+						locale -> printWriter.println(
+							_getOpenGraphTag(
+								"og:locale:alternate",
+								LocaleUtil.toLanguageId(locale))));
+
+					printWriter.println(
+						_getOpenGraphTag(
+							"og:site_name", group.getDescriptiveName()));
+					printWriter.println(
+						_getOpenGraphTag(
+							"og:title", _getTitle(httpServletRequest)));
+					printWriter.println(
+						_getOpenGraphTag("og:url", layoutSEOLink.getHref()));
 				}
 			}
 		}
@@ -116,5 +157,102 @@ public class OpenGraphTopHeadDynamicInclude extends BaseDynamicInclude {
 
 		return sb.toString();
 	}
+
+	private String _getOpenGraphTag(String property, String content) {
+		if (Validator.isNull(content)) {
+			return StringPool.BLANK;
+		}
+
+		StringBundler sb = new StringBundler(5);
+
+		sb.append("<meta property=\"");
+		sb.append(property);
+		sb.append("\" content=\"");
+		sb.append(content);
+		sb.append("\">");
+
+		return sb.toString();
+	}
+
+	private String _getTitle(HttpServletRequest httpServletRequest)
+		throws PortalException {
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		Layout layout = themeDisplay.getLayout();
+
+		String title = layout.getHTMLTitle(themeDisplay.getLanguageId());
+
+		Group group = layout.getGroup();
+
+		String portletId = (String)httpServletRequest.getAttribute(
+			WebKeys.PORTLET_ID);
+
+		if (Validator.isNotNull(portletId) && layout.isSystem() &&
+			!layout.isTypeControlPanel() &&
+			StringUtil.equals(layout.getFriendlyURL(), "/manage")) {
+
+			title = _portal.getPortletTitle(
+				portletId, themeDisplay.getLocale());
+		}
+		else if (Validator.isNotNull(themeDisplay.getTilesTitle())) {
+			title = _language.get(
+				themeDisplay.getLocale(), themeDisplay.getTilesTitle());
+		}
+		else {
+			if (group.isLayoutPrototype()) {
+				title = group.getDescriptiveName(themeDisplay.getLocale());
+			}
+			else {
+				if (Validator.isNotNull(
+						httpServletRequest.getAttribute(WebKeys.PAGE_TITLE))) {
+
+					ListMergeable<String> titleListMergeable =
+						(ListMergeable<String>)httpServletRequest.getAttribute(
+							WebKeys.PAGE_TITLE);
+					title = titleListMergeable.mergeToString(StringPool.SPACE);
+				}
+
+				if (Validator.isNotNull(
+						httpServletRequest.getAttribute(
+							WebKeys.PAGE_SUBTITLE))) {
+
+					ListMergeable<String> titleListMergeable =
+						(ListMergeable<String>)httpServletRequest.getAttribute(
+							WebKeys.PAGE_SUBTITLE);
+					title =
+						titleListMergeable.mergeToString(StringPool.SPACE) +
+							" - " + title;
+				}
+			}
+
+			if (HtmlUtil.getHtml() != null) {
+				title = HtmlUtil.escape(title);
+			}
+		}
+
+		String siteName = HtmlUtil.escape(group.getDescriptiveName());
+		Company company = themeDisplay.getCompany();
+
+		if (Validator.isNotNull(title) &&
+			!StringUtil.equals(company.getName(), siteName) &&
+			!group.isLayoutPrototype()) {
+
+			title = title + " - " + siteName;
+		}
+
+		return title + " - " + company.getName();
+	}
+
+	@Reference
+	private Language _language;
+
+	@Reference
+	private LayoutSEOLinkManager _layoutSEOLinkManager;
+
+	@Reference
+	private Portal _portal;
 
 }
