@@ -23,4 +23,7 @@ public class
 	public static final String FORM_PARAMETER_NAMESPACE =
 		"documentLibraryAssetAutoTaggerGoogleCloudNatualLanguage_";
 
+	public static final String LAYOUT_PAGE_LAYOUT_ADMIN_DISPLAY_CONTEXT =
+		"LAYOUT_PAGE_LAYOUT_ADMIN_DISPLAY_CONTEXT";
+
 }
