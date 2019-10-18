@@ -12,20 +12,21 @@
  * details.
  */
 
-package com.liferay.portal.upgrade.util.test;
+package com.liferay.depot.web.internal.constants;
 
 /**
- * @author Alicia García
+ * @author Alejandro Tardín
  */
-public class UpgradeMVCCVersionTestTableClass {
+public class DepotScreenNavigationEntryConstants {
 
-	public static final String TABLE_NAME = "UpgradeMVCCVersionTest";
+	public static final String CATEGORY_KEY_GENERAL = "general";
 
-	public static final String TABLE_SQL_CREATE =
-		"create table UpgradeMVCCVersionTest(_id LONG not null primary key" +
-			", _userId LONG)";
+	public static final String ENTRY_KEY_GENERAL = "general";
 
-	public static final String TABLE_SQL_DROP =
-		"drop table UpgradeMVCCVersionTest";
+	public static final String ENTRY_KEY_LANGUAGES = "languages";
+
+	public static final String ENTRY_KEY_SITES = "sites";
+
+	public static final String SCREEN_NAVIGATION_KEY_DEPOT = "edit.depot.form";
 
 }
