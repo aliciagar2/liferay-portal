@@ -20,47 +20,21 @@
 DepotEntry depotEntry = (DepotEntry)request.getAttribute(DepotAdminWebKeys.DEPOT_ENTRY);
 
 Group group = GroupServiceUtil.getGroup(depotEntry.getGroupId());
+
+String nameMap = JSONFactoryUtil.looseSerialize(group.getNameMap());
+
+UnicodeProperties typeSettingsProperties = group.getTypeSettingsProperties();
+
+boolean inheritLocales = GetterUtil.getBoolean(typeSettingsProperties.getProperty(GroupConstants.TYPE_SETTINGS_KEY_INHERIT_LOCALES), true);
+
+String screenNavigationCategoryKey = ParamUtil.getString(request, "screenNavigationCategoryKey", DepotScreenNavigationEntryConstants.ENTRY_KEY_LANGUAGES);
 %>
 
-<liferay-frontend:fieldset
-	collapsible="true"
-	label='<%= LanguageUtil.get(request, "language") %>'
->
+<aui:input name="screenNavigationCategoryKey" type="hidden" value="<%= screenNavigationCategoryKey %>" />
 
-	<%
-	UnicodeProperties typeSettingsProperties = null;
+	<aui:input checked="<%= inheritLocales %>" id="<%= GroupConstants.TYPE_SETTINGS_KEY_INHERIT_LOCALES %>" label="use-the-default-language-options" name="TypeSettingsProperties--inheritLocales--" type="radio" value="<%= true %>" />
 
-	if (group != null) {
-		typeSettingsProperties = group.getTypeSettingsProperties();
-	}
-	else {
-		typeSettingsProperties = new UnicodeProperties();
-	}
-
-	boolean inheritLocales = GetterUtil.getBoolean(typeSettingsProperties.getProperty(GroupConstants.TYPE_SETTINGS_KEY_INHERIT_LOCALES), true);
-
-	LayoutSet publicLayoutSet = group.getPublicLayoutSet();
-	LayoutSet privateLayoutSet = group.getPrivateLayoutSet();
-
-	boolean readOnlyLocaleInput = false;
-
-	if ((publicLayoutSet.isLayoutSetPrototypeLinkEnabled() || privateLayoutSet.isLayoutSetPrototypeLinkEnabled())
-		//&& !siteAdminConfiguration.enableCustomLanguagesWithTemplatePropagation()
-	) {
-
-		readOnlyLocaleInput = true;
-	}
-	%>
-
-	<c:if test="<%= readOnlyLocaleInput %>">
-		<p class="text-muted">
-			<liferay-ui:message key="the-language-settings-cannot-be-edited-while-propagation-of-changes-from-the-repository-template-is-enabled" />
-		</p>
-	</c:if>
-
-	<aui:input checked="<%= inheritLocales %>" id="<%= GroupConstants.TYPE_SETTINGS_KEY_INHERIT_LOCALES %>" label="use-the-default-language-options" name="TypeSettingsProperties--inheritLocales--" readonly="<%= readOnlyLocaleInput %>" type="radio" value="<%= true %>" />
-
-	<aui:input checked="<%= !inheritLocales %>" id="customLocales" label="define-a-custom-default-language-and-additional-available-languages-for-this-repository" name="TypeSettingsProperties--inheritLocales--" readonly="<%= readOnlyLocaleInput %>" type="radio" value="<%= false %>" />
+	<aui:input checked="<%= !inheritLocales %>" id="customLocales" label="define-a-custom-default-language-and-additional-available-languages-for-this-repository" name="TypeSettingsProperties--inheritLocales--" type="radio" value="<%= false %>" />
 
 	<aui:fieldset id='<%= renderResponse.getNamespace() + "inheritLocalesFieldset" %>'>
 		<aui:fieldset cssClass="default-language">
@@ -98,7 +72,7 @@ Group group = GroupServiceUtil.getGroup(depotEntry.getGroupId());
 					<liferay-ui:message key="you-cannot-remove-a-language-that-is-the-current-default-language" />
 				</c:when>
 				<c:when test="<%= le.getType() == LocaleException.TYPE_DISPLAY_SETTINGS %>">
-					<liferay-ui:message arguments="<%= StringUtil.merge(LocaleUtil.toDisplayNames(le.getSourceAvailableLocales(), locale), StringPool.COMMA_AND_SPACE) %>" key="please-select-the-available-languages-of-the-site-repository-the-available-languages-of-the-portal-x" translateArguments="<%= false %>" />
+					<liferay-ui:message arguments='<%= "<em>" + StringUtil.merge(LocaleUtil.toDisplayNames(le.getSourceAvailableLocales(), locale), StringPool.COMMA_AND_SPACE) + "</em>" %>' key="please-select-the-available-languages-of-the-repository-among-the-available-languages-of-the-portal-x" translateArguments="<%= false %>" />
 				</c:when>
 			</c:choose>
 		</liferay-ui:error>
@@ -110,7 +84,7 @@ Group group = GroupServiceUtil.getGroup(depotEntry.getGroupId());
 		<aui:fieldset cssClass="default-language">
 			<h4 class="text-default"><liferay-ui:message key="default-language" /></h4>
 
-			<aui:select label="" name="TypeSettingsProperties--languageId--" readonly="<%= readOnlyLocaleInput %>" title="language">
+			<aui:select label="" name="TypeSettingsProperties--languageId--" title="language">
 
 				<%
 				Locale defaultLocale = PortalUtil.getSiteDefaultLocale(group.getGroupId());
@@ -251,7 +225,7 @@ Group group = GroupServiceUtil.getGroup(depotEntry.getGroupId());
 					render: true
 				});
 
-				if (!defaultLanguageName && <%= !group.isGuest() %>) {
+				if (!defaultLanguageName) {
 					new A.Alert({
 						bodyContent:
 							'<liferay-ui:message key="repository-name-will-display-a-generic-text-until-a-translation-is-added" />',
@@ -271,9 +245,8 @@ Group group = GroupServiceUtil.getGroup(depotEntry.getGroupId());
 
 		var form = document.getElementById('<portlet:namespace />fm');
 
-		form.addEventListener('submit', function() {
-			event.preventDefault();
-			<portlet:namespace />saveGroup();
-		});
-	</aui:script>
-</liferay-frontend:fieldset>
+	form.addEventListener('submit', function() {
+		event.preventDefault();
+		<portlet:namespace />saveGroup();
+	});
+</aui:script>
