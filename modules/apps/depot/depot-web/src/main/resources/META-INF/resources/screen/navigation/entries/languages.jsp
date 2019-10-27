@@ -26,11 +26,28 @@ String nameMap = JSONFactoryUtil.looseSerialize(group.getNameMap());
 UnicodeProperties typeSettingsProperties = group.getTypeSettingsProperties();
 
 boolean inheritLocales = GetterUtil.getBoolean(typeSettingsProperties.getProperty(GroupConstants.TYPE_SETTINGS_KEY_INHERIT_LOCALES), true);
-
-String screenNavigationCategoryKey = ParamUtil.getString(request, "screenNavigationCategoryKey", DepotScreenNavigationEntryConstants.ENTRY_KEY_LANGUAGES);
 %>
 
-<aui:input name="screenNavigationCategoryKey" type="hidden" value="<%= screenNavigationCategoryKey %>" />
+<liferay-ui:error exception="<%= LocaleException.class %>">
+
+	<%
+		LocaleException le = (LocaleException)errorException;
+	%>
+
+	<c:choose>
+		<c:when test="<%= le.getType() == LocaleException.TYPE_DEFAULT %>">
+			<liferay-ui:message key="you-cannot-remove-a-language-that-is-the-current-default-language" />
+		</c:when>
+		<c:when test="<%= le.getType() == LocaleException.TYPE_DISPLAY_SETTINGS %>">
+			<liferay-ui:message arguments='<%= "<em>" + StringUtil.merge(LocaleUtil.toDisplayNames(le.getSourceAvailableLocales(), locale), StringPool.COMMA_AND_SPACE) + "</em>" %>' key="please-select-the-available-languages-of-the-repository-among-the-available-languages-of-the-portal-x" translateArguments="<%= false %>" />
+		</c:when>
+	</c:choose>
+</liferay-ui:error>
+
+<liferay-ui:error exception="<%= DepotEntryNameException.class %>">
+	<liferay-ui:message key="repository-name-is-required-for-the-default-language" />
+</liferay-ui:error>
+
 
 <aui:input checked="<%= inheritLocales %>" id="<%= GroupConstants.TYPE_SETTINGS_KEY_INHERIT_LOCALES %>" label="use-the-default-language-options" name="TypeSettingsProperties--inheritLocales--" type="radio" value="<%= true %>" />
 
@@ -61,25 +78,6 @@ String screenNavigationCategoryKey = ParamUtil.getString(request, "screenNavigat
 </aui:fieldset>
 
 <aui:fieldset id='<%= renderResponse.getNamespace() + "customLocalesFieldset" %>'>
-	<liferay-ui:error exception="<%= LocaleException.class %>">
-
-		<%
-		LocaleException le = (LocaleException)errorException;
-		%>
-
-		<c:choose>
-			<c:when test="<%= le.getType() == LocaleException.TYPE_DEFAULT %>">
-				<liferay-ui:message key="you-cannot-remove-a-language-that-is-the-current-default-language" />
-			</c:when>
-			<c:when test="<%= le.getType() == LocaleException.TYPE_DISPLAY_SETTINGS %>">
-				<liferay-ui:message arguments='<%= "<em>" + StringUtil.merge(LocaleUtil.toDisplayNames(le.getSourceAvailableLocales(), locale), StringPool.COMMA_AND_SPACE) + "</em>" %>' key="please-select-the-available-languages-of-the-repository-among-the-available-languages-of-the-portal-x" translateArguments="<%= false %>" />
-			</c:when>
-		</c:choose>
-	</liferay-ui:error>
-	<liferay-ui:error exception="<%= DepotEntryNameException.class %>">
-		<liferay-ui:message key="repository-name-is-required-for-the-default-language" />
-	</liferay-ui:error>
-
 	<%
 	Set<Locale> availableLocales = LanguageUtil.getAvailableLocales(group.getGroupId());
 	%>
@@ -202,7 +200,6 @@ String screenNavigationCategoryKey = ParamUtil.getString(request, "screenNavigat
 		const nameMapString = '<%= nameMap %>';
 
 		languageSelectInput.on('change', function(event) {
-
 			const select = event.currentTarget.getDOMNode();
 
 			const selectedOption = select.options[select.selectedIndex];
@@ -216,12 +213,12 @@ String screenNavigationCategoryKey = ParamUtil.getString(request, "screenNavigat
 			var defaultLanguageName = null;
 
 			if (nameMapString) {
-				try{
+				try {
 					let nameMap = JSON.parse(nameMapString);
-					if(nameMap){
+					if (nameMap) {
 						defaultLanguageName = nameMap[defaultLanguage];
 					}
-				}catch (e) {
+				} catch (e) {
 					console.log(e);
 				}
 			}
@@ -246,7 +243,6 @@ String screenNavigationCategoryKey = ParamUtil.getString(request, "screenNavigat
 					destroyOnHide: false,
 					render: true
 				});
-
 			}
 		});
 	}
