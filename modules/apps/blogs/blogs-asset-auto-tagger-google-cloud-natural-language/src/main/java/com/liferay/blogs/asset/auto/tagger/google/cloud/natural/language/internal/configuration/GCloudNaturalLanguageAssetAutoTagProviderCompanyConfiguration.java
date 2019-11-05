@@ -12,33 +12,36 @@
  * details.
  */
 
-package com.liferay.blogs.asset.auto.tagger.google.cloud.natural.language.internal.configuration;
+package com.liferay.asset.auto.tagger.internal.configuration;
 
 import aQute.bnd.annotation.metatype.Meta;
 
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
 
 /**
- * @author Alicia García
+ * @author Alejandro Tardín
  */
-@ExtendedObjectClassDefinition(
-	category = "blogs", scope = ExtendedObjectClassDefinition.Scope.COMPANY
-)
+@ExtendedObjectClassDefinition(category = "assets")
 @Meta.OCD(
-	description = "google-cloud-natural-language-asset-auto-tag-provider-description",
-	id = "com.liferay.blogs.asset.auto.tagger.google.cloud.natural.language.internal.configuration.GCloudNaturalLanguageAssetAutoTagProviderCompanyConfiguration",
+	id = "com.liferay.asset.auto.tagger.internal.configuration.AssetAutoTaggerSystemConfiguration",
 	localization = "content/Language",
-	name = "google-cloud-natural-language-asset-auto-tag-provider-configuration-name"
+	name = "asset-auto-tagger-configuration-name"
 )
-public interface GCloudNaturalLanguageAssetAutoTagProviderCompanyConfiguration {
+public interface AssetAutoTaggerSystemConfiguration {
 
 	/**
-	 * Enables auto tagging of blogs using a pre-trained Google Cloud Natual Language
-	 * model.
-	 *
-	 * @review
+	 * Enables asset auto tagging.
 	 */
-	@Meta.AD(deflt = "false", name = "enabled", required = false)
+	@Meta.AD(deflt = "true", name = "enabled", required = false)
 	public boolean enabled();
+
+	/**
+	 * Specifies the maximum number of tags that can be added for a given asset.
+	 */
+	@Meta.AD(
+		description = "system-maximum-number-of-tags-per-asset-description",
+		name = "maximum-number-of-tags-per-asset", required = false
+	)
+	public int maximumNumberOfTagsPerAsset();
 
 }
