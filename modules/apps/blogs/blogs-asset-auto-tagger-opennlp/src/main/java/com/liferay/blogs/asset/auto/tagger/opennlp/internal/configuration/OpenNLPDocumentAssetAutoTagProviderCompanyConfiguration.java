@@ -12,27 +12,38 @@
  * details.
  */
 
-package com.liferay.blogs.asset.auto.tagger.opennlp.internal.configuration;
+package com.liferay.asset.auto.tagger.internal.configuration;
 
 import aQute.bnd.annotation.metatype.Meta;
 
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
 
 /**
- * @author Alicia García
+ * @author Alejandro Tardín
  */
 @ExtendedObjectClassDefinition(
-	category = "blogs", scope = ExtendedObjectClassDefinition.Scope.COMPANY
+	category = "assets", scope = ExtendedObjectClassDefinition.Scope.COMPANY
 )
 @Meta.OCD(
-	description = "opennlp-auto-tag-provider-configuration-description",
-	id = "com.liferay.blogs.asset.auto.tagger.opennlp.internal.configuration.OpenNLPDocumentAssetAutoTagProviderCompanyConfiguration",
+	id = "com.liferay.asset.auto.tagger.internal.configuration.AssetAutoTaggerCompanyConfiguration",
 	localization = "content/Language",
-	name = "opennlp-auto-tag-provider-configuration-name"
+	name = "asset-auto-tagger-company-configuration-name"
 )
-public interface OpenNLPDocumentAssetAutoTagProviderCompanyConfiguration {
+public interface AssetAutoTaggerCompanyConfiguration {
 
-	@Meta.AD(deflt = "false", name = "enabled", required = false)
+	/**
+	 * Enables asset auto tagging.
+	 */
+	@Meta.AD(deflt = "true", name = "enabled", required = false)
 	public boolean enabled();
+
+	/**
+	 * Specifies the maximum number of tags that can be added for a given asset.
+	 */
+	@Meta.AD(
+		description = "company-maximum-number-of-tags-per-asset-description",
+		name = "maximum-number-of-tags-per-asset", required = false
+	)
+	public int maximumNumberOfTagsPerAsset();
 
 }
