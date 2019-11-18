@@ -12,20 +12,24 @@
  * details.
  */
 
-package com.liferay.site.admin.web.internal.constants;
+package com.liferay.layout.admin.web.internal.constants;
 
 /**
- * @author Jürgen Kappler
+ * @author Alejandro Tardín
  */
-public class SiteAdminWebKeys {
+public class LayoutScreenNavigationEntryConstants {
 
-	public static final String DLURL_HELPER = "DLURL_HELPER";
+	public static final String CATEGORY_KEY_GENERAL = "general";
 
-	public static final String GROUP_ENTRIES = "GROUP_ENTRIES";
+	public static final String ENTRY_KEY_CUSTOM_OPEN_GRAPH_META_TAGS =
+		"custom-open-graph-meta-tags";
 
-	public static final String ITEM_SELECTOR = "ITEM_SELECTOR";
+	public static final String ENTRY_KEY_GENERAL = "general";
 
-	public static final String SITE_DROPDOWN_DEFAULT_EVENT_HANDLER =
-		"SITE_DROPDOWN_DEFAULT_EVENT_HANDLER";
+	public static final String ENTRY_KEY_OPEN_GRAPH = "open-graph";
+
+	public static final String ENTRY_KEY_SEO = "seo";
+
+	public static final String SCREEN_NAVIGATION_KEY_LAYOUT = "layout.form";
 
 }
