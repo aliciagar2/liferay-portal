@@ -28,6 +28,7 @@ import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalService;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
@@ -36,6 +37,8 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import java.io.Serializable;
 
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -177,6 +180,9 @@ public interface LayoutSEOSiteLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public LayoutSEOSite fetchLayoutSEOSite(long layoutSEOSiteId);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public LayoutSEOSite fetchLayoutSEOSiteByGroupId(long groupId);
+
 	/**
 	 * Returns the layout seo site matching the UUID and group.
 	 *
@@ -290,5 +296,11 @@ public interface LayoutSEOSiteLocalService
 	 */
 	@Indexable(type = IndexableType.REINDEX)
 	public LayoutSEOSite updateLayoutSEOSite(LayoutSEOSite layoutSEOSite);
+
+	public LayoutSEOSite updateLayoutSEOSite(
+			long userId, long groupId, boolean openGraphEnabled,
+			Map<Locale, String> openGraphImageAltMap,
+			long openGraphImageFileEntryId, ServiceContext serviceContext)
+		throws PortalException;
 
 }
