@@ -12,24 +12,30 @@
  * details.
  */
 
-package com.liferay.layout.admin.web.internal.constants;
+package com.liferay.depot.application;
+
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.util.JavaConstants;
+
+import java.util.Locale;
 
 /**
  * @author Alejandro Tardín
  */
-public class LayoutScreenNavigationEntryConstants {
+public interface DepotApplication {
 
-	public static final String CATEGORY_KEY_GENERAL = "general";
+	public default String getLabel(Locale locale) {
+		return LanguageUtil.get(
+			locale,
+			JavaConstants.JAVAX_PORTLET_TITLE + StringPool.PERIOD +
+				getPortletId());
+	}
 
-	public static final String ENTRY_KEY_CUSTOM_OPEN_GRAPH_META_TAGS =
-		"custom-open-graph-meta-tags";
+	public String getPortletId();
 
-	public static final String ENTRY_KEY_GENERAL = "general";
-
-	public static final String ENTRY_KEY_OPEN_GRAPH = "open-graph";
-
-	public static final String ENTRY_KEY_SEO = "seo";
-
-	public static final String SCREEN_NAVIGATION_KEY_LAYOUT = "layout.form";
+	public default boolean isCustomizable() {
+		return false;
+	}
 
 }
