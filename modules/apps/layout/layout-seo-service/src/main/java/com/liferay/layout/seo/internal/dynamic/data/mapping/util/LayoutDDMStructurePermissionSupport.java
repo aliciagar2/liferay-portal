@@ -12,26 +12,36 @@
  * details.
  */
 
-package com.liferay.layout.seo.internal.dynamic.data.mapping.util;
+package com.liferay.depot.web.internal.application;
 
-import com.liferay.dynamic.data.mapping.util.DDMStructurePermissionSupport;
-import com.liferay.layout.seo.model.LayoutSEOEntry;
+import com.liferay.asset.categories.admin.web.constants.AssetCategoriesAdminPortletKeys;
+import com.liferay.depot.application.DepotApplication;
+import com.liferay.portal.kernel.language.LanguageUtil;
+
+import java.util.Locale;
 
 import org.osgi.service.component.annotations.Component;
 
 /**
- * @author Alicia Garcia
+ * @author Alejandro Tardín
  */
-@Component(
-	property = "model.class.name=com.liferay.layout.seo.model.LayoutSEOEntry",
-	service = DDMStructurePermissionSupport.class
-)
-public class LayoutDDMStructurePermissionSupport
-	implements DDMStructurePermissionSupport {
+@Component(immediate = true, service = DepotApplication.class)
+public class AssetCategoriesAdminDepotApplication implements DepotApplication {
 
 	@Override
-	public String getResourceName() {
-		return LayoutSEOEntry.class.getName();
+	public String getLabel(Locale locale) {
+		return LanguageUtil.get(
+			locale, "model.resource.com.liferay.asset.categories");
+	}
+
+	@Override
+	public String getPortletId() {
+		return AssetCategoriesAdminPortletKeys.ASSET_CATEGORIES_ADMIN;
+	}
+
+	@Override
+	public boolean isCustomizable() {
+		return true;
 	}
 
 }

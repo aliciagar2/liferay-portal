@@ -12,23 +12,36 @@
  * details.
  */
 
-package com.liferay.document.library.asset.auto.tagger.google.cloud.natural.language.internal.constants;
+package com.liferay.depot.web.internal.application;
+
+import com.liferay.asset.tags.constants.AssetTagsAdminPortletKeys;
+import com.liferay.depot.application.DepotApplication;
+import com.liferay.portal.kernel.language.LanguageUtil;
+
+import java.util.Locale;
+
+import org.osgi.service.component.annotations.Component;
 
 /**
- * @author Alicia García
+ * @author Alejandro Tardín
  */
-public class GoogleCloudNaturalLanguageAssetAutoTagProviderConstants {
+@Component(immediate = true, service = DepotApplication.class)
+public class AssetTagsAdminDepotApplication implements DepotApplication {
 
-	public static final String API_KEY_DOCS_URL =
-		"https://cloud.google.com/docs/authentication/api-keys";
+	@Override
+	public String getLabel(Locale locale) {
+		return LanguageUtil.get(
+			locale, "model.resource.com.liferay.asset.tags");
+	}
 
-	/**
-	 * The document maximum size is 1000000 bytes.
-	 */
-	public static final int MAX_CHARACTERS_SERVICE = 1000000;
+	@Override
+	public String getPortletId() {
+		return AssetTagsAdminPortletKeys.ASSET_TAGS_ADMIN;
+	}
 
-	public static final String SERVICE_NAME =
-		"com.liferay.document.library.asset.auto.tagger.google.cloud.natural." +
-			"language";
+	@Override
+	public boolean isCustomizable() {
+		return true;
+	}
 
 }

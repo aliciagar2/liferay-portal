@@ -12,21 +12,35 @@
  * details.
  */
 
-package com.liferay.document.library.asset.auto.tagger.google.cloud.natural.language.internal.constants;
+package com.liferay.depot.web.internal.application;
+
+import com.liferay.depot.application.DepotApplication;
+import com.liferay.document.library.constants.DLPortletKeys;
+import com.liferay.portal.kernel.language.LanguageUtil;
+
+import java.util.Locale;
+
+import org.osgi.service.component.annotations.Component;
 
 /**
- * @author Alicia García
+ * @author Alejandro Tardín
  */
-public class
-	PortalSettingsGoogleCloudNaturalLanguageAssetAutoTagProviderConstants {
+@Component(immediate = true, service = DepotApplication.class)
+public class DLDepotApplication implements DepotApplication {
 
-	public static final String FORM_PARAMETER_NAMESPACE =
-		"documentLibraryAssetAutoTaggerGoogleCloudNatualLanguage_";
+	@Override
+	public String getLabel(Locale locale) {
+		return LanguageUtil.get(locale, "documents-and-media");
+	}
 
-	public static final String LAYOUT_PAGE_LAYOUT_ADMIN_DISPLAY_CONTEXT =
-		"LAYOUT_PAGE_LAYOUT_ADMIN_DISPLAY_CONTEXT";
+	@Override
+	public String getPortletId() {
+		return DLPortletKeys.DOCUMENT_LIBRARY_ADMIN;
+	}
 
-	public static final String LAYOUT_PAGE_LAYOUT_SEO_DISPLAY_CONTEXT =
-		"LAYOUT_PAGE_LAYOUT_SEO_DISPLAY_CONTEXT";
+	@Override
+	public boolean isCustomizable() {
+		return true;
+	}
 
 }
