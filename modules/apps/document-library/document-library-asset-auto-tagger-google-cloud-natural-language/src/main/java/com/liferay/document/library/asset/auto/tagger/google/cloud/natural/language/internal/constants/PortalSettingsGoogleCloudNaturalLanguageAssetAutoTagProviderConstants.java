@@ -40,7 +40,7 @@ public class DLDepotApplication implements DepotApplication {
 
 	@Override
 	public boolean isCustomizable() {
-		return true;
+		return false;
 	}
 
 }
