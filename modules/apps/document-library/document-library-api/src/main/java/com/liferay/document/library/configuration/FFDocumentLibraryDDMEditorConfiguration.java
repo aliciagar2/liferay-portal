@@ -12,22 +12,15 @@
  * details.
  */
 
-package com.liferay.document.library.configuration;
-
-import aQute.bnd.annotation.metatype.Meta;
-
-import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
+package com.liferay.sharing.configuration;
 
 /**
- * @author Alicia García
+ * @author Adolfo Pérez
  */
-@ExtendedObjectClassDefinition(generateUI = false)
-@Meta.OCD(
-	id = "com.liferay.document.library.configuration.FFDocumentLibraryDDMEditorConfiguration"
-)
-public interface FFDocumentLibraryDDMEditorConfiguration {
+public interface SharingConfiguration {
 
-	@Meta.AD(deflt = "false", required = false)
-	public boolean useDataEngineEditor();
+	public boolean isAvailable();
+
+	public boolean isEnabled();
 
 }
