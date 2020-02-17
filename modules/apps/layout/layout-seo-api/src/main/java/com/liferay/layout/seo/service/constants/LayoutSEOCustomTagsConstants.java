@@ -12,30 +12,22 @@
  * details.
  */
 
-package com.liferay.depot.application;
+package com.liferay.document.library.item.selector.web.internal;
 
-import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.util.JavaConstants;
-
-import java.util.Locale;
+import com.liferay.item.selector.ItemSelectorCriterion;
+import com.liferay.item.selector.PortletItemSelectorView;
 
 /**
- * @author Alejandro Tardín
+ * @author Roberto Díaz
  */
-public interface DepotApplication {
+public interface DLItemSelectorView<T extends ItemSelectorCriterion>
+	extends PortletItemSelectorView<T> {
 
-	public default String getLabel(Locale locale) {
-		return LanguageUtil.get(
-			locale,
-			JavaConstants.JAVAX_PORTLET_TITLE + StringPool.PERIOD +
-				getPortletId());
-	}
+	public static final String DL_ITEM_SELECTOR_VIEW_DISPLAY_CONTEXT =
+		"DL_ITEM_SELECTOR_VIEW_DISPLAY_CONTEXT";
 
-	public String getPortletId();
+	public String[] getExtensions();
 
-	public default boolean isCustomizable() {
-		return false;
-	}
+	public String[] getMimeTypes();
 
 }
