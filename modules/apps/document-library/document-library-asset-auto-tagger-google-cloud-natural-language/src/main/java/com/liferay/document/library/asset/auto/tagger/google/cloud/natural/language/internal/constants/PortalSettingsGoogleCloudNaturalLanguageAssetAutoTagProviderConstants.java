@@ -12,35 +12,35 @@
  * details.
  */
 
-package com.liferay.depot.web.internal.application;
+package com.liferay.document.library.web.internal.servlet.taglib.definition;
 
-import com.liferay.depot.application.DepotApplication;
-import com.liferay.document.library.constants.DLPortletKeys;
-import com.liferay.portal.kernel.language.LanguageUtil;
-
-import java.util.Locale;
+import com.liferay.data.engine.taglib.servlet.taglib.definition.DataLayoutBuilderDefinition;
 
 import org.osgi.service.component.annotations.Component;
 
 /**
- * @author Alejandro Tardín
+ * @author Eudaldo Alonso
  */
-@Component(immediate = true, service = DepotApplication.class)
-public class DLDepotApplication implements DepotApplication {
+@Component(
+	immediate = true, property = "content.type=document-library",
+	service = DataLayoutBuilderDefinition.class
+)
+public class DocumentLibraryDataLayoutBuilderDefinition
+	implements DataLayoutBuilderDefinition {
 
 	@Override
-	public String getLabel(Locale locale) {
-		return LanguageUtil.get(locale, "documents-and-media");
+	public boolean allowFieldSets() {
+		return true;
 	}
 
 	@Override
-	public String getPortletId() {
-		return DLPortletKeys.DOCUMENT_LIBRARY_ADMIN;
-	}
-
-	@Override
-	public boolean isCustomizable() {
+	public boolean allowMultiplePages() {
 		return false;
+	}
+
+	@Override
+	public String[] getDisabledTabs() {
+		return new String[] {"Autocomplete"};
 	}
 
 }
