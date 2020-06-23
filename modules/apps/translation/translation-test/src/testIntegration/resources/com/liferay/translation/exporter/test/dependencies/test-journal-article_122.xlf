@@ -14,16 +14,10 @@
 				<target><![CDATA[Este es el resumen]]></target>
 			</segment>
 		</unit>
-		<unit id="content">
+		<unit id="name">
 			<segment>
-				<source><![CDATA[<p>This is the content</p>
-
-<p>&nbsp;</p>
-
-<p><img src="/documents/20122/0/ponyo1.jpg/b87b44bd-7bae-5bf7-4927-af67bd07ac88?t=1592294400785" /></p>
-
-<p>&nbsp;</p>]]></source>
-				<target><![CDATA[<p><strong>Este es el contenido</strong></p>]]></target>
+				<source><![CDATA[<p>This is the content</p>]]></source>
+				<target><![CDATA[<p>Este es el contenido</p>]]></target>
 			</segment>
 		</unit>
 	</file>
