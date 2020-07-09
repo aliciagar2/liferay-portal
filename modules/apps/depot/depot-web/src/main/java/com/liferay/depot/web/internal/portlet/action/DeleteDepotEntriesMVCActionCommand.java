@@ -25,25 +25,22 @@ import com.liferay.info.localized.InfoLocalizedValue;
 import com.liferay.journal.constants.JournalPortletKeys;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.service.JournalArticleService;
-import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.PropertiesParamUtil;
+import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.translation.info.item.updater.InfoItemFieldValuesUpdater;
 
-import java.io.IOException;
-
-import java.util.HashMap;
+import java.util.Collection;
 import java.util.Locale;
-import java.util.Map;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-import javax.portlet.WindowStateException;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -65,59 +62,47 @@ public class UpdateTranslationMVCActionCommand extends BaseMVCActionCommand {
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
 
-		long groupId = ParamUtil.getLong(actionRequest, "groupId");
-		String articleId = ParamUtil.getString(actionRequest, "articleId");
-		double version = ParamUtil.getDouble(actionRequest, "version");
-
-		String targetLanguageId = ParamUtil.getString(
-			actionRequest, "targetLanguageId");
-
 		try {
-			Map<String, String> infoFields = _getInfoFieldsMap(
-				actionRequest, actionRequest.getParameterMap(), "infoField--");
-
-			InfoItemFieldValuesProvider<JournalArticle>
-				infoItemFieldValuesProvider =
-					_infoItemServiceTracker.getFirstInfoItemService(
-						InfoItemFieldValuesProvider.class,
-						JournalArticle.class.getName());
-
-			JournalArticle article = _journalArticleService.getArticle(
-				groupId, articleId, version);
-
-			InfoItemFieldValues infoItemFieldValues =
-				infoItemFieldValuesProvider.getInfoItemFieldValues(article);
-
-			InfoItemFieldValues newInfoItemFieldValues =
-				new InfoItemFieldValues(
-					new InfoItemClassPKReference(
-						JournalArticle.class.getName(),
-						article.getResourcePrimKey()));
-
-			Locale targetLocale = LocaleUtil.fromLanguageId(targetLanguageId);
+			JournalArticle article = ActionUtil.getArticle(actionRequest);
+			UnicodeProperties infoFieldUnicodeProperties =
+				PropertiesParamUtil.getProperties(actionRequest, "infoField--");
+			InfoItemFieldValues infoItemFieldValues = new InfoItemFieldValues(
+				new InfoItemClassPKReference(
+					JournalArticle.class.getName(),
+					article.getResourcePrimKey()));
 
 			for (InfoFieldValue<Object> infoFieldValue :
-					infoItemFieldValues.getInfoFieldValues()) {
+					_getInfoFieldValues(article)) {
 
 				InfoField infoField = infoFieldValue.getInfoField();
 
-				if ((infoField != null) &&
-					(infoFields.get(infoField.getName()) != null)) {
-
-					newInfoItemFieldValues.add(
-						_createInfoFieldValue(
-							infoField.getName(), targetLocale,
-							infoFields.get(infoField.getName())));
+				if (infoField == null) {
+					continue;
 				}
+
+				String value = infoFieldUnicodeProperties.get(
+					infoField.getName());
+
+				if (value == null) {
+					continue;
+				}
+
+				infoItemFieldValues.add(
+					_createInfoFieldValue(
+						infoField.getName(), _getTargetLocale(actionRequest),
+						value));
 			}
 
 			_journalArticleInfoItemFieldValuesUpdater.
-				updateFromInfoItemFieldValues(article, newInfoItemFieldValues);
+				updateFromInfoItemFieldValues(article, infoItemFieldValues);
 		}
 		catch (Exception exception) {
+			_log.error(exception, exception);
+
 			SessionErrors.add(actionRequest, exception.getClass(), exception);
 
-			_sendRedirect(actionRequest, actionResponse, articleId);
+			actionResponse.setRenderParameter(
+				"mvcRenderCommandName", "/journal/translate");
 		}
 	}
 
@@ -136,47 +121,36 @@ public class UpdateTranslationMVCActionCommand extends BaseMVCActionCommand {
 		return new InfoFieldValue<>(infoField, value);
 	}
 
-	private Map<String, String> _getInfoFieldsMap(
-		ActionRequest actionRequest, Map<String, String[]> parameterMap,
-		String prefix) {
+	private Collection<InfoFieldValue<Object>> _getInfoFieldValues(
+		JournalArticle article) {
 
-		Map<String, String> infoFields = new HashMap<>();
+		InfoItemFieldValuesProvider<JournalArticle>
+			infoItemFieldValuesProvider =
+				_infoItemServiceTracker.getFirstInfoItemService(
+					InfoItemFieldValuesProvider.class,
+					JournalArticle.class.getName());
 
-		for (String param : parameterMap.keySet()) {
-			if (param.startsWith(prefix)) {
-				String key = param.substring(prefix.length());
+		InfoItemFieldValues infoItemFieldValues =
+			infoItemFieldValuesProvider.getInfoItemFieldValues(article);
 
-				infoFields.put(key, ParamUtil.getString(actionRequest, param));
-			}
-		}
-
-		return infoFields;
+		return infoItemFieldValues.getInfoFieldValues();
 	}
 
-	private void _sendRedirect(
-			ActionRequest actionRequest, ActionResponse actionResponse,
-			String articleId)
-		throws IOException, WindowStateException {
+	private Locale _getTargetLocale(ActionRequest actionRequest) {
+		String targetLanguageId = ParamUtil.getString(
+			actionRequest, "targetLanguageId");
 
-		PortletURL portletURL = PortletURLFactoryUtil.create(
-			actionRequest, JournalPortletKeys.JOURNAL,
-			PortletRequest.RENDER_PHASE);
-
-		portletURL.setParameter("mvcPath", "/translation.jsp");
-		portletURL.setParameter(
-			"redirect", ParamUtil.getString(actionRequest, "redirect"));
-		portletURL.setParameter("articleId", articleId);
-
-		portletURL.setWindowState(actionRequest.getWindowState());
-
-		sendRedirect(actionRequest, actionResponse, portletURL.toString());
+		return LocaleUtil.fromLanguageId(targetLanguageId);
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		UpdateTranslationMVCActionCommand.class);
 
 	@Reference
 	private InfoItemServiceTracker _infoItemServiceTracker;
 
 	@Reference(
-		target = "(model.class.name=com.liferay.journal.model.JournalArticle)"
+		target = "(item.class.name=com.liferay.journal.model.JournalArticle)"
 	)
 	private InfoItemFieldValuesUpdater<JournalArticle>
 		_journalArticleInfoItemFieldValuesUpdater;
