@@ -12,42 +12,42 @@
  * details.
  */
 
-package com.liferay.depot.service.impl;
+package com.liferay.translation.service.impl;
 
-import com.liferay.depot.service.base.DepotAppCustomizationServiceBaseImpl;
 import com.liferay.portal.aop.AopService;
+import com.liferay.translation.service.base.TranslationEntryServiceBaseImpl;
 
 import org.osgi.service.component.annotations.Component;
 
 /**
- * The implementation of the depot app customization remote service.
+ * The implementation of the translation entry remote service.
  *
  * <p>
  * All custom service methods should be put in this class. Whenever methods are
  * added, rerun ServiceBuilder to copy their definitions into the
- * <code>com.liferay.depot.service.DepotAppCustomizationService</code>
+ * <code>com.liferay.translation.service.TranslationEntryService</code>
  * interface. <p> This is a remote service. Methods of this service are expected
  * to have security checks based on the propagated JAAS credentials because this
  * service can be accessed remotely.
  * </p>
  *
  * @author Brian Wing Shun Chan
- * @see    DepotAppCustomizationServiceBaseImpl
+ * @see    TranslationEntryServiceBaseImpl
  */
 @Component(
 	property = {
-		"json.web.service.context.name=depot",
-		"json.web.service.context.path=DepotAppCustomization"
+		"json.web.service.context.name=translation",
+		"json.web.service.context.path=TranslationEntry"
 	},
 	service = AopService.class
 )
-public class DepotAppCustomizationServiceImpl
-	extends DepotAppCustomizationServiceBaseImpl {
+public class TranslationEntryServiceImpl
+	extends TranslationEntryServiceBaseImpl {
 
 	/**
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never reference this class directly. Always use <code>com.liferay.depot.service.DepotAppCustomizationServiceUtil</code> to access the depot app customization remote service.
+	 * Never reference this class directly. Always use <code>com.liferay.translation.service.TranslationEntryServiceUtil</code> to access the translation entry remote service.
 	 */
 
 }
