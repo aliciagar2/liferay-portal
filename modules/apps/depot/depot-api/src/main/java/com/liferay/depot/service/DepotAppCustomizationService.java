@@ -14,13 +14,17 @@
 
 package com.liferay.depot.service;
 
+import com.liferay.info.item.InfoItemFieldValues;
+import com.liferay.info.item.InfoItemReference;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
 import com.liferay.portal.kernel.security.access.control.AccessControlled;
 import com.liferay.portal.kernel.service.BaseService;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Transactional;
+import com.liferay.translation.model.TranslationEntry;
 
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -47,6 +51,20 @@ public interface DepotAppCustomizationService extends BaseService {
 	 *
 	 * Never modify or reference this interface directly. Always use {@link DepotAppCustomizationServiceUtil} to access the depot app customization remote service. Add custom service methods to <code>com.liferay.depot.service.impl.DepotAppCustomizationServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
+
+	/**
+	 * NOTE FOR DEVELOPERS:
+	 *
+	 * Never reference this class directly. Always use
+	 * <code>TranslationEntryServiceUtil</code>
+	 * to access the translation entry remote service.
+	 */
+	public TranslationEntry addOrUpdateTranslationEntry(
+			long groupId, String languageId,
+			InfoItemReference infoItemReference,
+			InfoItemFieldValues infoItemFieldValues,
+			ServiceContext serviceContext)
+		throws PortalException;
 
 	/**
 	 * Returns the OSGi service identifier.
