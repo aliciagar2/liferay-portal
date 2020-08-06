@@ -16,27 +16,30 @@ package com.liferay.journal.web.internal.portlet.action;
 
 import com.liferay.info.field.InfoField;
 import com.liferay.info.field.InfoFieldValue;
-import com.liferay.info.field.type.TextInfoFieldType;
-import com.liferay.info.item.InfoItemClassPKReference;
+import com.liferay.info.form.InfoForm;
 import com.liferay.info.item.InfoItemFieldValues;
+import com.liferay.info.item.InfoItemReference;
 import com.liferay.info.item.InfoItemServiceTracker;
-import com.liferay.info.item.provider.InfoItemFieldValuesProvider;
+import com.liferay.info.item.provider.InfoItemFormProvider;
+import com.liferay.info.item.updater.InfoItemFieldValuesUpdater;
 import com.liferay.info.localized.InfoLocalizedValue;
 import com.liferay.journal.constants.JournalPortletKeys;
 import com.liferay.journal.model.JournalArticle;
-import com.liferay.journal.service.JournalArticleService;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PropertiesParamUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
-import com.liferay.translation.info.item.updater.InfoItemFieldValuesUpdater;
+import com.liferay.translation.service.TranslationEntryService;
 
-import java.util.Collection;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 import javax.portlet.ActionRequest;
@@ -64,37 +67,24 @@ public class UpdateTranslationMVCActionCommand extends BaseMVCActionCommand {
 
 		try {
 			JournalArticle article = ActionUtil.getArticle(actionRequest);
-			UnicodeProperties infoFieldUnicodeProperties =
-				PropertiesParamUtil.getProperties(actionRequest, "infoField--");
-			InfoItemFieldValues infoItemFieldValues = new InfoItemFieldValues(
-				new InfoItemClassPKReference(
-					JournalArticle.class.getName(),
-					article.getResourcePrimKey()));
 
-			for (InfoFieldValue<Object> infoFieldValue :
-					_getInfoFieldValues(article)) {
+			InfoItemReference infoItemReference = new InfoItemReference(
+				JournalArticle.class.getName(), article.getResourcePrimKey());
 
-				InfoField infoField = infoFieldValue.getInfoField();
+			InfoItemFieldValues infoItemFieldValues =
+				InfoItemFieldValues.builder(
+				).infoItemReference(
+					infoItemReference
+				).infoFieldValues(
+					_getInfoFieldValues(actionRequest, article)
+				).build();
 
-				if (infoField == null) {
-					continue;
-				}
+			ServiceContext serviceContext = ServiceContextFactory.getInstance(
+				actionRequest);
 
-				String value = infoFieldUnicodeProperties.get(
-					infoField.getName());
-
-				if (value == null) {
-					continue;
-				}
-
-				infoItemFieldValues.add(
-					_createInfoFieldValue(
-						infoField.getName(), _getTargetLocale(actionRequest),
-						value));
-			}
-
-			_journalArticleInfoItemFieldValuesUpdater.
-				updateFromInfoItemFieldValues(article, infoItemFieldValues);
+			_translationEntryService.addOrUpdateTranslationEntry(
+				article.getGroupId(), _getTargetLanguageId(actionRequest),
+				infoItemReference, infoItemFieldValues, serviceContext);
 		}
 		catch (Exception exception) {
 			_log.error(exception, exception);
@@ -106,41 +96,47 @@ public class UpdateTranslationMVCActionCommand extends BaseMVCActionCommand {
 		}
 	}
 
-	private InfoFieldValue<Object> _createInfoFieldValue(
-		String fieldName, Locale locale, String value) {
+	private List<InfoField> _getInfoFields(JournalArticle article) {
+		InfoItemFormProvider<JournalArticle> infoItemFormProvider =
+			_infoItemServiceTracker.getFirstInfoItemService(
+				InfoItemFormProvider.class, JournalArticle.class.getName());
 
-		InfoLocalizedValue<String> infoLocalizedValue =
-			InfoLocalizedValue.builder(
-			).addValue(
-				locale, fieldName
-			).build();
+		InfoForm infoForm = infoItemFormProvider.getInfoForm(article);
 
-		InfoField infoField = new InfoField(
-			TextInfoFieldType.INSTANCE, infoLocalizedValue, true, fieldName);
-
-		return new InfoFieldValue<>(infoField, value);
+		return infoForm.getAllInfoFields();
 	}
 
-	private Collection<InfoFieldValue<Object>> _getInfoFieldValues(
-		JournalArticle article) {
+	private List<InfoFieldValue<Object>> _getInfoFieldValues(
+		ActionRequest actionRequest, JournalArticle article) {
 
-		InfoItemFieldValuesProvider<JournalArticle>
-			infoItemFieldValuesProvider =
-				_infoItemServiceTracker.getFirstInfoItemService(
-					InfoItemFieldValuesProvider.class,
-					JournalArticle.class.getName());
+		UnicodeProperties infoFieldUnicodeProperties =
+			PropertiesParamUtil.getProperties(actionRequest, "infoField--");
 
-		InfoItemFieldValues infoItemFieldValues =
-			infoItemFieldValuesProvider.getInfoItemFieldValues(article);
+		List<InfoFieldValue<Object>> infoFieldValues = new ArrayList<>();
 
-		return infoItemFieldValues.getInfoFieldValues();
+		for (InfoField infoField : _getInfoFields(article)) {
+			String value = infoFieldUnicodeProperties.get(infoField.getName());
+
+			if (value != null) {
+				infoFieldValues.add(
+					new InfoFieldValue<>(
+						infoField,
+						InfoLocalizedValue.builder(
+						).value(
+							_getTargetLocale(actionRequest), value
+						).build()));
+			}
+		}
+
+		return infoFieldValues;
+	}
+
+	private String _getTargetLanguageId(ActionRequest actionRequest) {
+		return ParamUtil.getString(actionRequest, "targetLanguageId");
 	}
 
 	private Locale _getTargetLocale(ActionRequest actionRequest) {
-		String targetLanguageId = ParamUtil.getString(
-			actionRequest, "targetLanguageId");
-
-		return LocaleUtil.fromLanguageId(targetLanguageId);
+		return LocaleUtil.fromLanguageId(_getTargetLanguageId(actionRequest));
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -156,6 +152,6 @@ public class UpdateTranslationMVCActionCommand extends BaseMVCActionCommand {
 		_journalArticleInfoItemFieldValuesUpdater;
 
 	@Reference
-	private JournalArticleService _journalArticleService;
+	private TranslationEntryService _translationEntryService;
 
 }
