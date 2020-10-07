@@ -12,35 +12,34 @@
  * details.
  */
 
-package com.liferay.document.library.web.internal.servlet.taglib.definition;
+package com.liferay.depot.internal.upgrade;
 
-import com.liferay.data.engine.taglib.servlet.taglib.definition.DataLayoutBuilderDefinition;
+import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
 
 import org.osgi.service.component.annotations.Component;
 
 /**
- * @author Eudaldo Alonso
+ * @author Alejandro Tardín
  */
-@Component(
-	immediate = true, property = "content.type=document-library",
-	service = DataLayoutBuilderDefinition.class
-)
-public class DocumentLibraryDataLayoutBuilderDefinition
-	implements DataLayoutBuilderDefinition {
+@Component(service = UpgradeStepRegistrator.class)
+public class DepotServiceUpgrade implements UpgradeStepRegistrator {
 
 	@Override
-	public boolean allowFieldSets() {
-		return true;
-	}
+	public void register(Registry registry) {
+		registry.register(
+			"1.0.0", "1.1.0",
+			new com.liferay.depot.internal.upgrade.v1_1_0.
+				UpgradeDepotEntryGroupRel());
 
-	@Override
-	public boolean allowMultiplePages() {
-		return false;
-	}
+		registry.register(
+			"1.1.0", "1.2.0",
+			new com.liferay.depot.internal.upgrade.v1_2_0.
+				UpgradeDepotEntryGroupRel());
 
-	@Override
-	public String[] getDisabledTabs() {
-		return new String[] {"Autocomplete"};
+		registry.register(
+			"1.2.0", "2.0.0",
+			new com.liferay.depot.internal.upgrade.v2_0_0.
+				UpgradeDepotEntryGroupRel());
 	}
 
 }
