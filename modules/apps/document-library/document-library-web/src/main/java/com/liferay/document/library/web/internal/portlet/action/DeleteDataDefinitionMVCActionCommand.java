@@ -20,12 +20,15 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Eudaldo Alonso
@@ -37,7 +40,7 @@ import org.osgi.service.component.annotations.Component;
 		"javax.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY,
 		"javax.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY_ADMIN,
 		"javax.portlet.name=" + DLPortletKeys.MEDIA_GALLERY_DISPLAY,
-		"mvc.command.name=/document_library/ddm/delete_data_definition"
+		"mvc.command.name=/document_library/delete_data_definition"
 	},
 	service = MVCActionCommand.class
 )
@@ -64,15 +67,34 @@ public class DeleteDataDefinitionMVCActionCommand extends BaseMVCActionCommand {
 				actionRequest, "rowIds");
 		}
 
+		DataDefinitionResource.Builder dataDefinitionResourceBuilder =
+			_dataDefinitionResourceFactory.create();
+
 		DataDefinitionResource dataDefinitionResource =
-			DataDefinitionResource.builder(
-			).user(
+			dataDefinitionResourceBuilder.user(
 				themeDisplay.getUser()
 			).build();
 
-		for (long deleteDataDefinitionId : deleteDataDefinitionIds) {
-			dataDefinitionResource.deleteDataDefinition(deleteDataDefinitionId);
+		try {
+			for (long deleteDataDefinitionId : deleteDataDefinitionIds) {
+				dataDefinitionResource.deleteDataDefinition(
+					deleteDataDefinitionId);
+			}
+		}
+		finally {
+			String redirect = _portal.escapeRedirect(
+				ParamUtil.getString(actionRequest, "redirect"));
+
+			if (Validator.isNotNull(redirect)) {
+				actionResponse.sendRedirect(redirect);
+			}
 		}
 	}
+
+	@Reference
+	private DataDefinitionResource.Factory _dataDefinitionResourceFactory;
+
+	@Reference
+	private Portal _portal;
 
 }
