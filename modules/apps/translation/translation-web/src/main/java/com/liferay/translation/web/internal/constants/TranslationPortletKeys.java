@@ -12,14 +12,25 @@
  * details.
  */
 
-package com.liferay.translation.web.internal.constants;
+package com.liferay.layout.seo.open.graph;
+
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.Company;
+import com.liferay.portal.kernel.model.Group;
 
 /**
- * @author Alicia Garcia
+ * @author Adolfo Pérez
  */
-public class TranslationPortletKeys {
+public interface OpenGraphConfiguration {
 
-	public static final String TRANSLATION =
-		"com_liferay_translation_web_internal_portlet_TranslationPortlet";
+	public boolean isLayoutTranslatedLanguagesEnabled(Company company)
+		throws PortalException;
+
+	public boolean isLayoutTranslatedLanguagesEnabled(Group group)
+		throws PortalException;
+
+	public boolean isOpenGraphEnabled(Company company) throws PortalException;
+
+	public boolean isOpenGraphEnabled(Group group) throws PortalException;
 
 }
