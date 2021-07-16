@@ -12,15 +12,17 @@
  * details.
  */
 
-package com.liferay.portal.store.gcs.constants;
+package com.liferay.translation.info.item.provider;
+
+import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Alicia García
  */
-public class ConfigurationGCSConstants {
+public interface InfoItemLanguagesProvider<T> {
 
-	public static final String SERVICE_ACCOUNT_KEYS_URL =
-		"https://cloud.google.com/iam/docs" +
-			"/creating-managing-service-account-keys";
+	public String[] getAvailableLanguageIds(T t) throws PortalException;
+
+	public String getDefaultLanguageId(T t);
 
 }
