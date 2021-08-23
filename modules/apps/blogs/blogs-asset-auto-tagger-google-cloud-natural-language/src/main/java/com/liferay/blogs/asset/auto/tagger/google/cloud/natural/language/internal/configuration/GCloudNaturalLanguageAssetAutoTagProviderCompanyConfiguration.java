@@ -12,36 +12,37 @@
  * details.
  */
 
-package com.liferay.asset.auto.tagger.internal.configuration;
+package com.liferay.translation.google.cloud.translator.internal.configuration;
 
 import aQute.bnd.annotation.metatype.Meta;
 
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
 
 /**
- * @author Alejandro Tardín
+ * @author Adolfo Pérez
  */
-@ExtendedObjectClassDefinition(category = "assets")
-@Meta.OCD(
-	id = "com.liferay.asset.auto.tagger.internal.configuration.AssetAutoTaggerSystemConfiguration",
-	localization = "content/Language",
-	name = "asset-auto-tagger-configuration-name"
+@ExtendedObjectClassDefinition(
+	category = "translation",
+	scope = ExtendedObjectClassDefinition.Scope.COMPANY
 )
-public interface AssetAutoTaggerSystemConfiguration {
+@Meta.OCD(
+	id = "com.liferay.translation.google.cloud.translator.internal.configuration.GoogleCloudTranslatorConfiguration",
+	localization = "content/Language",
+	name = "google-cloud-translator-configuration-name"
+)
+public interface GoogleCloudTranslatorConfiguration {
 
-	/**
-	 * Enables asset auto tagging.
-	 */
-	@Meta.AD(deflt = "true", name = "enabled", required = false)
+	@Meta.AD(
+		deflt = "false",
+		description = "enabled-description[google-cloud-translation]",
+		name = "enabled", required = false
+	)
 	public boolean enabled();
 
-	/**
-	 * Specifies the maximum number of tags that can be added for a given asset.
-	 */
 	@Meta.AD(
-		description = "system-maximum-number-of-tags-per-asset-description",
-		name = "maximum-number-of-tags-per-asset", required = false
+		deflt = "", description = "service-account-private-key-description",
+		name = "service-account-private-key", required = false
 	)
-	public int maximumNumberOfTagsPerAsset();
+	public String serviceAccountPrivateKey();
 
 }
