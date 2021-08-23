@@ -12,25 +12,20 @@
  * details.
  */
 
-package com.liferay.layout.seo.open.graph;
+package com.liferay.translation.translator;
 
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 
 /**
  * @author Adolfo Pérez
  */
-public interface OpenGraphConfiguration {
+public interface Translator {
 
-	public boolean isLayoutTranslatedLanguagesEnabled(Company company)
+	public boolean isEnabled();
+
+	public boolean isEnabled(long companyId) throws ConfigurationException;
+
+	public TranslatorPacket translate(TranslatorPacket translatorPacket)
 		throws PortalException;
-
-	public boolean isLayoutTranslatedLanguagesEnabled(Group group)
-		throws PortalException;
-
-	public boolean isOpenGraphEnabled(Company company) throws PortalException;
-
-	public boolean isOpenGraphEnabled(Group group) throws PortalException;
 
 }
