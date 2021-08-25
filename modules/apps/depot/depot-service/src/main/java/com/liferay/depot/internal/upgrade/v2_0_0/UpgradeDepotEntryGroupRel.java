@@ -12,23 +12,21 @@
  * details.
  */
 
-package com.liferay.depot.internal.upgrade.v2_0_0;
+package com.liferay.translation.translator;
 
-import com.liferay.depot.internal.upgrade.v2_0_0.util.DepotEntryGroupRelTable;
-import com.liferay.portal.kernel.upgrade.UpgradeProcess;
+import java.util.Map;
 
 /**
- * @author Alicia Garcia
+ * @author Adolfo Pérez
  */
-public class UpgradeDepotEntryGroupRel extends UpgradeProcess {
+public interface TranslatorPacket {
 
-	@Override
-	protected void doUpgrade() throws Exception {
-		alter(
-			DepotEntryGroupRelTable.class,
-			new AlterTableAddColumn("userId", "LONG"),
-			new AlterTableAddColumn("userName", "VARCHAR(75) null"),
-			new AlterTableAddColumn("lastPublishDate", "DATE null"));
-	}
+	public long getCompanyId();
+
+	public Map<String, String> getFieldsMap();
+
+	public String getSourceLanguageId();
+
+	public String getTargetLanguageId();
 
 }
