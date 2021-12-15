@@ -70,6 +70,8 @@ public class LayoutInfoItemLanguagesProvider
 			}
 		}
 
+		availableLocalesIds.add(getDefaultLanguageId(layout));
+
 		return availableLocalesIds.toArray(new String[0]);
 	}
 
