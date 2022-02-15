@@ -12,38 +12,38 @@
  * details.
  */
 
-package com.liferay.asset.auto.tagger.internal.configuration;
+package com.liferay.portal.security.antisamy.configuration;
 
 import aQute.bnd.annotation.metatype.Meta;
 
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
 
 /**
- * @author Alejandro Tardín
+ * @author Tomas Polesovsky
  */
-@ExtendedObjectClassDefinition(
-	category = "assets", scope = ExtendedObjectClassDefinition.Scope.COMPANY
-)
+@ExtendedObjectClassDefinition(category = "security-tools")
 @Meta.OCD(
-	id = "com.liferay.asset.auto.tagger.internal.configuration.AssetAutoTaggerCompanyConfiguration",
-	localization = "content/Language",
-	name = "asset-auto-tagger-company-configuration-name"
+	id = "com.liferay.portal.security.antisamy.configuration.AntiSamyConfiguration",
+	localization = "content/Language", name = "anti-samy-configuration-name"
 )
-public interface AssetAutoTaggerCompanyConfiguration {
+public interface AntiSamyConfiguration {
 
-	/**
-	 * Enables asset auto tagging.
-	 */
 	@Meta.AD(deflt = "true", name = "enabled", required = false)
 	public boolean enabled();
 
-	/**
-	 * Specifies the maximum number of tags that can be added for a given asset.
-	 */
 	@Meta.AD(
-		description = "company-maximum-number-of-tags-per-asset-description",
-		name = "maximum-number-of-tags-per-asset", required = false
+		deflt = "/META-INF/resources/sanitizer-configuration.xml",
+		name = "configuration-file-url", required = false
 	)
-	public int maximumNumberOfTagsPerAsset();
+	public String configurationFileURL();
+
+	@Meta.AD(name = "blacklist", required = false)
+	public String[] blacklist();
+
+	@Meta.AD(
+		deflt = "com.liferay.fragment.model.FragmentEntry|com.liferay.journal.model.JournalArticle",
+		name = "whitelist", required = false
+	)
+	public String[] whitelist();
 
 }
