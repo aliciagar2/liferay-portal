@@ -12,7 +12,7 @@
  * details.
  */
 
-package com.liferay.translation.google.cloud.translator.internal.configuration;
+package com.liferay.document.library.web.internal.configuration;
 
 import aQute.bnd.annotation.metatype.Meta;
 
@@ -22,27 +22,32 @@ import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClass
  * @author Adolfo Pérez
  */
 @ExtendedObjectClassDefinition(
-	category = "translation",
+	category = "documents-and-media",
 	scope = ExtendedObjectClassDefinition.Scope.COMPANY
 )
 @Meta.OCD(
-	id = "com.liferay.translation.google.cloud.translator.internal.configuration.GoogleCloudTranslatorConfiguration",
-	localization = "content/Language",
-	name = "google-cloud-translator-configuration-name"
+	id = "com.liferay.document.library.web.internal.configuration.CacheControlConfiguration",
+	localization = "content/Language", name = "cache-control-configuration-name"
 )
-public interface GoogleCloudTranslatorConfiguration {
+public interface CacheControlConfiguration {
 
 	@Meta.AD(
-		deflt = "false",
-		description = "enabled-description[google-cloud-translation]",
-		name = "enabled", required = false
+		deflt = "private", description = "cache-control-description",
+		name = "cache-control", optionLabels = {"private", "public"},
+		optionValues = {"private", "public"}
 	)
-	public boolean enabled();
+	public String cacheControl();
 
 	@Meta.AD(
-		deflt = "", description = "service-account-private-key-description",
-		name = "service-account-private-key", required = false
+		deflt = "0", description = "max-age-description", name = "max-age",
+		required = false
 	)
-	public String serviceAccountPrivateKey();
+	public int maxAge();
+
+	@Meta.AD(
+		description = "uncacheable-mime-types-description",
+		name = "uncacheable-mime-types", required = false
+	)
+	public String[] notCacheableMimeTypes();
 
 }
