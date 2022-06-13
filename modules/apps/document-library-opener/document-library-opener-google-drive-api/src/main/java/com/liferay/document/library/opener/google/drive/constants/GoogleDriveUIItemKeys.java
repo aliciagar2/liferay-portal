@@ -15,7 +15,7 @@
 package com.liferay.document.library.web.internal.util;
 
 import com.liferay.depot.model.DepotEntry;
-import com.liferay.depot.service.DepotEntryServiceUtil;
+import com.liferay.depot.service.DepotEntryLocalServiceUtil;
 import com.liferay.document.library.kernel.exception.NoSuchFolderException;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -47,20 +47,23 @@ public class DLFolderUtil {
 			long folderId, long groupId, long scopeGroupId)
 		throws PortalException {
 
-		if (groupId != scopeGroupId) {
-			Group group = GroupLocalServiceUtil.getGroup(groupId);
+		if (groupId == scopeGroupId) {
+			return;
+		}
 
-			if (group.isDepot()) {
-				List<Long> groupConnectedDepotEntries = ListUtil.toList(
-					DepotEntryServiceUtil.getGroupConnectedDepotEntries(
-						scopeGroupId, QueryUtil.ALL_POS, QueryUtil.ALL_POS),
-					DepotEntry::getGroupId);
+		Group group = GroupLocalServiceUtil.getGroup(groupId);
 
-				if (!groupConnectedDepotEntries.contains(groupId)) {
-					throw new NoSuchFolderException(
-						"{folderId=" + folderId + "}");
-				}
-			}
+		if (!group.isDepot()) {
+			return;
+		}
+
+		List<Long> groupConnectedDepotEntries = ListUtil.toList(
+			DepotEntryLocalServiceUtil.getGroupConnectedDepotEntries(
+				scopeGroupId, QueryUtil.ALL_POS, QueryUtil.ALL_POS),
+			DepotEntry::getGroupId);
+
+		if (!groupConnectedDepotEntries.contains(groupId)) {
+			throw new NoSuchFolderException("{folderId=" + folderId + "}");
 		}
 	}
 
