@@ -19,11 +19,16 @@ import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.friendly.url.model.FriendlyURLEntryLocalization;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
 import com.liferay.friendly.url.util.comparator.FriendlyURLEntryLocalizationComparator;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.GroupThreadLocal;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 
@@ -53,15 +58,13 @@ public class FileEntryInfoItemFriendlyURLProvider
 			return String.valueOf(fileEntry.getFileEntryId());
 		}
 
-		ServiceContext serviceContext =
-			ServiceContextThreadLocal.getServiceContext();
-
-		long groupId = serviceContext.getScopeGroupId();
+		long groupId = _getGroupId();
 
 		if ((groupId != GroupConstants.DEFAULT_LIVE_GROUP_ID) &&
 			(groupId != mainFriendlyURLEntry.getGroupId())) {
 
-			return String.valueOf(fileEntry.getFileEntryId());
+			return _getGroupFriendlyURL(
+				fileEntry.getFileEntryId(), mainFriendlyURLEntry);
 		}
 
 		return mainFriendlyURLEntry.getUrlTitle();
@@ -79,12 +82,54 @@ public class FileEntryInfoItemFriendlyURLProvider
 			_friendlyURLEntryLocalizationComparator);
 	}
 
+	private String _getGroupFriendlyURL(
+		long fileEntryId, FriendlyURLEntry friendlyURLEntry) {
+
+		Group group = _groupLocalService.fetchGroup(
+			friendlyURLEntry.getGroupId());
+
+		if (group == null) {
+			return String.valueOf(fileEntryId);
+		}
+
+		String groupFriendlyURL = group.getFriendlyURL();
+
+		return groupFriendlyURL.replaceFirst(StringPool.SLASH, "") +
+			StringPool.SLASH + friendlyURLEntry.getUrlTitle();
+	}
+
+	private long _getGroupId() {
+		ServiceContext serviceContext =
+			ServiceContextThreadLocal.getServiceContext();
+
+		if (serviceContext == null) {
+			return GroupThreadLocal.getGroupId();
+		}
+
+		if (serviceContext.getThemeDisplay() == null) {
+			return serviceContext.getScopeGroupId();
+		}
+
+		ThemeDisplay themeDisplay = serviceContext.getThemeDisplay();
+
+		if (themeDisplay.getSiteGroupId() !=
+				GroupConstants.DEFAULT_LIVE_GROUP_ID) {
+
+			return themeDisplay.getSiteGroupId();
+		}
+
+		return themeDisplay.getScopeGroupId();
+	}
+
 	private final FriendlyURLEntryLocalizationComparator
 		_friendlyURLEntryLocalizationComparator =
 			new FriendlyURLEntryLocalizationComparator();
 
 	@Reference
 	private FriendlyURLEntryLocalService _friendlyURLEntryLocalService;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
 
 	@Reference
 	private Portal _portal;
