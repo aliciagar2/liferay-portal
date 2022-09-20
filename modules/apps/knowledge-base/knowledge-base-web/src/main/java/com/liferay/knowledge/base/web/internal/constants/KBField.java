@@ -12,13 +12,13 @@
  * details.
  */
 
-package com.liferay.knowledge.base.web.internal.constants;
+package com.liferay.redirect.configuration;
 
 /**
- * @author Alicia García
+ * @author Alejandro Tardín
  */
-public class KBField {
+public interface RedirectConfiguration {
 
-	public static final String KB_ARTICLE_ID = "kbArticleId";
+	public boolean isRedirectNotFoundEnabled();
 
 }
