@@ -12,29 +12,22 @@
  * details.
  */
 
-package com.liferay.portal.upgrade.v7_4_x;
+package com.liferay.redirect.configuration;
 
-import com.liferay.portal.kernel.upgrade.UpgradeProcess;
-import com.liferay.portal.upgrade.v7_4_x.util.DLFileVersionTable;
+import com.liferay.portal.kernel.module.configuration.ConfigurationException;
+
+import java.util.Map;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Alicia García
  */
-public class UpgradeDLFileVersion extends UpgradeProcess {
+@ProviderType
+public interface RedirectPatternConfigurationProvider {
 
-	@Override
-	protected void doUpgrade() throws Exception {
-		if (!hasColumn("DLFileVersion", "expirationDate")) {
-			alter(
-				DLFileVersionTable.class,
-				new AlterTableAddColumn("expirationDate", "DATE null"));
-		}
+	public Map<String, String> getRedirectionPatternsMap(long groupId)
+		throws ConfigurationException;
 
-		if (!hasColumn("DLFileVersion", "reviewDate")) {
-			alter(
-				DLFileVersionTable.class,
-				new AlterTableAddColumn("reviewDate", "DATE null"));
-		}
-	}
 
 }
