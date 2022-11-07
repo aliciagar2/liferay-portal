@@ -13,23 +13,33 @@
  */
 
 import ClayButton from '@clayui/button';
-import {ClayInput} from '@clayui/form';
+import ClayForm, {ClayInput} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import ClayLayout from '@clayui/layout';
+import {sub} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useState} from 'react';
 import uuidv4 from 'uuid/v4';
 
 import '../css/redirect_pattern.scss';
 
+const REGEX_URL_ALLOW_RELATIVE = /((([A-Za-z]{3,9}:(?:\/\/)?)|\/(?:[-;:&=+$,\w]+@)?[A-Za-z0-9.-]+|(https?:\/\/|www.|[-;:&=+$,\w]+@)[A-Za-z0-9.-]+)((?:\/[+~%/.\w-_]*)?\??(?:[-+=&;%@.\w_]*)#?(?:[\w]*))((.*):(\d*)\/?(.*))?)/;
+
 const PatternField = ({
-	destinationURL = '',
+	destinationURL: initialDestinationUrl,
 	handleAddClick,
 	handleRemoveClick,
 	index,
 	pattern = '',
 	portletNamespace,
 }) => {
+	const [destinationUrl, setDestinationUrl] = useState(initialDestinationUrl);
+	const [urlError, setUrlError] = useState(false);
+
+	const urlAllowRelative = (url) => {
+		return REGEX_URL_ALLOW_RELATIVE && REGEX_URL_ALLOW_RELATIVE.test(url);
+	};
+
 	return (
 		<ClayLayout.Row className="redirect-pattern-row">
 			<ClayLayout.Col md="6">
@@ -52,7 +62,10 @@ const PatternField = ({
 				/>
 			</ClayLayout.Col>
 
-			<ClayLayout.Col md="6">
+			<ClayLayout.Col
+				className={destinationUrl && urlError ? 'has-error' : ''}
+				md="6"
+			>
 				<label htmlFor="destinationURL">
 					{Liferay.Language.get('destination-url')}
 
@@ -67,10 +80,16 @@ const PatternField = ({
 				</label>
 
 				<ClayInput
-					defaultValue={destinationURL}
 					id="destinationURL"
 					name={`${portletNamespace}destinationURL_${index}`}
+					onBlur={({currentTarget}) => {
+						setUrlError(!urlAllowRelative(currentTarget.value));
+					}}
+					onChange={({currentTarget}) =>
+						setDestinationUrl(currentTarget.value)
+					}
 					type="text"
+					value={destinationUrl}
 				/>
 
 				{index > 0 && (
@@ -95,6 +114,29 @@ const PatternField = ({
 				>
 					<ClayIcon symbol="plus" />
 				</ClayButton>
+
+				{destinationUrl && urlError && (
+					<ClayForm.FeedbackGroup>
+						<ClayForm.FeedbackItem>
+							<ClayForm.FeedbackIndicator symbol="exclamation-full" />
+
+							{Liferay.Language.get('this-url-is-not-supported')}
+						</ClayForm.FeedbackItem>
+
+						<div
+							className="small"
+							dangerouslySetInnerHTML={{
+								__html: sub(
+									Liferay.Language.get(
+										'please-enter-a-valid-url'
+									),
+									'<em>',
+									'</em>'
+								),
+							}}
+						/>
+					</ClayForm.FeedbackGroup>
+				)}
 			</ClayLayout.Col>
 		</ClayLayout.Row>
 	);
@@ -102,7 +144,7 @@ const PatternField = ({
 
 const RedirectPattern = ({
 	description = Liferay.Language.get('redirect-patterns-description'),
-	patternsList: initialPatternsList,
+	patterns: initialPatternsList,
 	portletNamespace,
 }) => {
 	const emptyRow = () => ({destinationURL: '', id: uuidv4(), pattern: ''});
@@ -121,7 +163,7 @@ const RedirectPattern = ({
 
 	const [patterns, setPatterns] = useState(
 		initialPatternsList && !!initialPatternsList.length
-			? initialPatternsList
+			? initialPatternsList.map((item) => ({...item, id: uuidv4()}))
 			: [emptyRow()]
 	);
 
@@ -146,7 +188,7 @@ const RedirectPattern = ({
 
 RedirectPattern.propTypes = {
 	description: PropTypes.string,
-	patternsList: PropTypes.arrayOf(
+	patterns: PropTypes.arrayOf(
 		PropTypes.shape({
 			destinationURL: PropTypes.string,
 			pattern: PropTypes.string,
