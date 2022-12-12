@@ -12,23 +12,34 @@
  * details.
  */
 
-package com.liferay.translation.google.cloud.translator.internal.settings.definition;
+package com.liferay.knowledge.base.internal.configuration;
 
-import com.liferay.portal.kernel.settings.definition.ConfigurationBeanDeclaration;
-import com.liferay.translation.google.cloud.translator.internal.configuration.GoogleCloudTranslatorConfiguration;
+import aQute.bnd.annotation.metatype.Meta;
 
-import org.osgi.service.component.annotations.Component;
+import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
 
 /**
  * @author Alicia García
  */
-@Component(service = ConfigurationBeanDeclaration.class)
-public class GoogleCloudTranslatorConfigurationBeanDeclaration
-	implements ConfigurationBeanDeclaration {
+@ExtendedObjectClassDefinition(
+	category = "knowledge-base", generateUI = false,
+	scope = ExtendedObjectClassDefinition.Scope.COMPANY
+)
+@Meta.OCD(
+	id = "com.liferay.knowledge.base.internal.configuration.KBServiceConfiguration",
+	localization = "content/Language",
+	name = "knowledge-base-service-configuration-name"
+)
+public interface KBServiceConfiguration {
 
-	@Override
-	public Class<?> getConfigurationBeanClass() {
-		return GoogleCloudTranslatorConfiguration.class;
-	}
+	@Meta.AD(deflt = "15", name = "check-interval", required = false)
+	public int checkInterval();
+
+	@Meta.AD(
+		deflt = "1",
+		description = "expiration-date-notification-date-weeks-help",
+		name = "expiration-date-notification-date-weeks", required = false
+	)
+	public int expirationDateNotificationDateWeeks();
 
 }
