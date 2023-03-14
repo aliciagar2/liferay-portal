@@ -18,11 +18,12 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.redirect.configuration.RedirectPatternConfigurationProvider;
+import com.liferay.redirect.model.RedirectPatternEntry;
 import com.liferay.redirect.provider.RedirectProvider;
 
 import java.util.Dictionary;
+import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -32,19 +33,17 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * @author Alicia García
  */
-@Component(
-	immediate = true, service = RedirectPatternConfigurationProvider.class
-)
+@Component(service = RedirectPatternConfigurationProvider.class)
 public class RedirectPatternConfigurationProviderImpl
 	implements RedirectPatternConfigurationProvider {
 
-	public Map<Pattern, String> getRedirectPatterns(long groupId) {
-		return _redirectProvider.getRedirectPatterns(groupId);
+	public List<RedirectPatternEntry> getRedirectPatternEntries(long groupId) {
+		return _redirectProvider.getRedirectPatternEntries(groupId);
 	}
 
 	@Override
-	public void updateRedirectPatterns(
-			long groupId, Map<String, String> redirectPatterns)
+	public void updatePatternStrings(
+			long groupId, Map<String, String> patternStrings)
 		throws Exception {
 
 		Dictionary<String, Object> properties = null;
@@ -76,31 +75,25 @@ public class RedirectPatternConfigurationProviderImpl
 			properties = configuration.getProperties();
 		}
 
-		_updatePatternsProperty(properties, redirectPatterns);
-
-		configuration.update(properties);
-	}
-
-	private void _updatePatternsProperty(
-		Dictionary<String, Object> properties, Map<String, String> patterns) {
-
-		if (patterns.isEmpty()) {
-			properties.put("patterns", new String[0]);
+		if (patternStrings.isEmpty()) {
+			properties.put("patternStrings", new String[0]);
 		}
 		else {
-			String[] patternsArray = new String[patterns.size()];
+			String[] patternStringsArray = new String[patternStrings.size()];
 
 			int i = 0;
 
-			for (Map.Entry<String, String> entry : patterns.entrySet()) {
-				patternsArray[i] =
+			for (Map.Entry<String, String> entry : patternStrings.entrySet()) {
+				patternStringsArray[i] =
 					entry.getKey() + StringPool.SPACE + entry.getValue();
 
 				i++;
 			}
 
-			properties.put("patterns", patternsArray);
+			properties.put("patternStrings", patternStringsArray);
 		}
+
+		configuration.update(properties);
 	}
 
 	@Reference
