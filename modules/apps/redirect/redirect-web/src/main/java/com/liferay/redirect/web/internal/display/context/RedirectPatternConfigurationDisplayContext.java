@@ -14,17 +14,19 @@
 
 package com.liferay.redirect.web.internal.display.context;
 
-import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.redirect.configuration.RedirectPatternConfigurationProvider;
+import com.liferay.redirect.model.RedirectPatternEntry;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -37,55 +39,70 @@ public class RedirectPatternConfigurationDisplayContext {
 		HttpServletRequest httpServletRequest,
 		LiferayPortletResponse liferayPortletResponse,
 		RedirectPatternConfigurationProvider
-			redirectPatternConfigurationProvider,
-		long scopePK) {
+			redirectPatternConfigurationProvider) {
 
 		_httpServletRequest = httpServletRequest;
 		_liferayPortletResponse = liferayPortletResponse;
 		_redirectPatternConfigurationProvider =
 			redirectPatternConfigurationProvider;
-		_scopePK = scopePK;
 	}
 
-	public String getRedirectPatternConfigurationURL() {
+	public Map<String, Object> getRedirectPatterns() {
+		return HashMapBuilder.<String, Object>put(
+			"actionUrl", _getRedirectPatternConfigurationURL()
+		).put(
+			"patterns",
+			() -> {
+				List<Map<String, Object>> list = new ArrayList<>();
+
+				ThemeDisplay themeDisplay =
+					(ThemeDisplay)_httpServletRequest.getAttribute(
+						WebKeys.THEME_DISPLAY);
+
+				List<RedirectPatternEntry> redirectPatternEntries =
+					_redirectPatternConfigurationProvider.
+						getRedirectPatternEntries(
+							themeDisplay.getScopeGroupId());
+
+				redirectPatternEntries.forEach(
+					redirectPatternUserAgent -> list.add(
+						HashMapBuilder.<String, Object>put(
+							"destinationURL",
+							redirectPatternUserAgent.getDestinationURL()
+						).put(
+							"pattern",
+							String.valueOf(
+								redirectPatternUserAgent.getPattern())
+						).build()));
+
+				return list;
+			}
+		).put(
+			"portletNamespace", _liferayPortletResponse.getNamespace()
+		).put(
+			"strings",
+			HashMapBuilder.put(
+				"absoluteURL", PortalUtil.getPortalURL(_httpServletRequest)
+			).put(
+				"relativeURL",
+				PropsValues.DEFAULT_GUEST_PUBLIC_LAYOUT_FRIENDLY_URL
+			).build()
+		).build();
+	}
+
+	private String _getRedirectPatternConfigurationURL() {
 		return PortletURLBuilder.createActionURL(
 			_liferayPortletResponse
 		).setActionName(
-			"/redirect_settings/edit_redirect_patterns"
+			"/redirect/edit_redirect_patterns"
 		).setRedirect(
 			PortalUtil.getCurrentURL(_httpServletRequest)
-		).setParameter(
-			"scopePK", _scopePK
 		).buildString();
-	}
-
-	public Map<String, Object> getRedirectPatternsData()
-		throws ConfigurationException {
-
-		List<Map<String, Object>> patternsList = new ArrayList<>();
-
-		Map<Pattern, String> redirectPatterns =
-			_redirectPatternConfigurationProvider.getRedirectPatterns(_scopePK);
-
-		redirectPatterns.forEach(
-			(pattern, destinationURL) -> patternsList.add(
-				HashMapBuilder.<String, Object>put(
-					"destinationURL", destinationURL
-				).put(
-					"pattern", pattern.toString()
-				).build()));
-
-		return HashMapBuilder.<String, Object>put(
-			"patternsList", patternsList
-		).put(
-			"portletNamespace", _liferayPortletResponse.getNamespace()
-		).build();
 	}
 
 	private final HttpServletRequest _httpServletRequest;
 	private final LiferayPortletResponse _liferayPortletResponse;
 	private final RedirectPatternConfigurationProvider
 		_redirectPatternConfigurationProvider;
-	private final long _scopePK;
 
 }
