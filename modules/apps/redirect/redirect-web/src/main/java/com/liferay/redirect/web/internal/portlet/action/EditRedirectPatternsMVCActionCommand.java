@@ -14,17 +14,24 @@
 
 package com.liferay.redirect.web.internal.portlet.action;
 
-import com.liferay.configuration.admin.constants.ConfigurationAdminPortletKeys;
 import com.liferay.portal.configuration.persistence.listener.ConfigurationModelListenerException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.servlet.SessionErrors;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.redirect.configuration.RedirectPatternConfigurationProvider;
+import com.liferay.redirect.constants.RedirectConstants;
+import com.liferay.redirect.model.RedirectPatternEntry;
+import com.liferay.redirect.web.internal.constants.RedirectPortletKeys;
 
-import java.util.LinkedHashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -37,8 +44,8 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + ConfigurationAdminPortletKeys.SITE_SETTINGS,
-		"mvc.command.name=/redirect_settings/edit_redirect_patterns"
+		"javax.portlet.name=" + RedirectPortletKeys.REDIRECT,
+		"mvc.command.name=/redirect/edit_redirect_patterns"
 	},
 	service = MVCActionCommand.class
 )
@@ -50,9 +57,12 @@ public class EditRedirectPatternsMVCActionCommand extends BaseMVCActionCommand {
 		throws Exception {
 
 		try {
-			_redirectPatternConfigurationProvider.updateRedirectPatterns(
-				ParamUtil.getLong(actionRequest, "scopePK"),
-				_getRedirectPatterns(actionRequest));
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)actionRequest.getAttribute(WebKeys.THEME_DISPLAY);
+
+			_redirectPatternConfigurationProvider.updatePatternStrings(
+				themeDisplay.getScopeGroupId(),
+				_getRedirectPatternEntries(actionRequest));
 		}
 		catch (ConfigurationModelListenerException
 					configurationModelListenerException) {
@@ -60,25 +70,29 @@ public class EditRedirectPatternsMVCActionCommand extends BaseMVCActionCommand {
 			SessionErrors.add(
 				actionRequest, configurationModelListenerException.getClass());
 
+			hideDefaultErrorMessage(actionRequest);
+
 			actionResponse.sendRedirect(
 				ParamUtil.getString(actionRequest, "redirect"));
 		}
 	}
 
-	private Map<String, String> _getRedirectPatterns(
+	private List<RedirectPatternEntry> _getRedirectPatternEntries(
 		ActionRequest actionRequest) {
 
-		Map<String, String> redirectPatterns = new LinkedHashMap<>();
+		List<RedirectPatternEntry> redirectPatternEntries = new ArrayList<>();
 
 		Map<String, String[]> parameterMap = actionRequest.getParameterMap();
 
 		for (int i = 0; parameterMap.containsKey("pattern_" + i); i++) {
-			String pattern = null;
+			String patternString = null;
 
-			String[] patterns = parameterMap.get("pattern_" + i);
+			String[] patterStrings = parameterMap.get("pattern_" + i);
 
-			if ((patterns.length != 0) && Validator.isNotNull(patterns[0])) {
-				pattern = patterns[0];
+			if ((patterStrings.length != 0) &&
+				Validator.isNotNull(patterStrings[0])) {
+
+				patternString = patterStrings[0];
 			}
 
 			String destinationURL = null;
@@ -91,12 +105,33 @@ public class EditRedirectPatternsMVCActionCommand extends BaseMVCActionCommand {
 				destinationURL = destinationURLs[0];
 			}
 
-			if ((pattern != null) || (destinationURL != null)) {
-				redirectPatterns.put(pattern, destinationURL);
+			String userAgent = _getUserAgent(parameterMap, i);
+
+			if ((patternString != null) && (destinationURL != null) &&
+				(userAgent != null)) {
+
+				redirectPatternEntries.add(
+					new RedirectPatternEntry(
+						Pattern.compile(patternString), destinationURL,
+						userAgent));
 			}
 		}
 
-		return redirectPatterns;
+		return redirectPatternEntries;
+	}
+
+	private String _getUserAgent(Map<String, String[]> parameterMap, int i) {
+		if (!FeatureFlagManagerUtil.isEnabled("LPS-175850")) {
+			return RedirectConstants.USER_AGENT_ALL;
+		}
+
+		String[] userAgents = parameterMap.get("userAgent_" + i);
+
+		if ((userAgents.length != 0) && Validator.isNotNull(userAgents[0])) {
+			return userAgents[0];
+		}
+
+		return null;
 	}
 
 	@Reference
