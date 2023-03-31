@@ -12,7 +12,7 @@
  * details.
  */
 
-package com.liferay.knowledge.base.web.internal.messaging.test;
+package com.liferay.knowledge.base.web.internal.scheduler.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.knowledge.base.model.KBArticle;
@@ -33,7 +33,6 @@ import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.props.test.util.PropsTemporarySwapper;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
@@ -51,7 +50,7 @@ import org.junit.runner.RunWith;
  */
 @RunWith(Arquillian.class)
 @Sync
-public class CheckKBArticleMessageListenerTest {
+public class CheckKBArticleSchedulerJobConfigurationTest {
 
 	@ClassRule
 	@Rule
@@ -70,36 +69,30 @@ public class CheckKBArticleMessageListenerTest {
 
 	@Test
 	public void testExpireFileEntry() throws Exception {
-		try (PropsTemporarySwapper propsTemporarySwapper =
-				new PropsTemporarySwapper(
-					"feature.flag.LPS-165476", Boolean.TRUE.toString())) {
+		Date expirationDate = new Date(
+			System.currentTimeMillis() + (Time.MINUTE * 5));
 
-			Date expirationDate = new Date(
-				System.currentTimeMillis() + (Time.MINUTE * 5));
+		KBArticle kbArticle = _kbArticleLocalService.addKBArticle(
+			null, UserLocalServiceUtil.getDefaultUserId(_group.getCompanyId()),
+			PortalUtil.getClassNameId(KBFolder.class.getName()), 0,
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), null,
+			null, expirationDate, null, null,
+			ServiceContextTestUtil.getServiceContext(
+				_group, _user.getUserId()));
 
-			KBArticle kbArticle = _kbArticleLocalService.addKBArticle(
-				null,
-				UserLocalServiceUtil.getDefaultUserId(_group.getCompanyId()),
-				PortalUtil.getClassNameId(KBFolder.class.getName()), 0,
-				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-				null, null, expirationDate, null, null,
-				ServiceContextTestUtil.getServiceContext(
-					_group, _user.getUserId()));
+		kbArticle.setExpirationDate(
+			new Date(System.currentTimeMillis() - (Time.MINUTE * 10)));
 
-			kbArticle.setExpirationDate(
-				new Date(System.currentTimeMillis() - (Time.MINUTE * 10)));
+		kbArticle = _kbArticleLocalService.updateKBArticle(kbArticle);
 
-			kbArticle = _kbArticleLocalService.updateKBArticle(kbArticle);
+		_kbArticleLocalService.checkKBArticles(_group.getCompanyId());
 
-			_kbArticleLocalService.checkKBArticles();
+		kbArticle = _kbArticleLocalService.getLatestKBArticle(
+			kbArticle.getResourcePrimKey(), WorkflowConstants.STATUS_ANY);
 
-			kbArticle = _kbArticleLocalService.getLatestKBArticle(
-				kbArticle.getResourcePrimKey(), WorkflowConstants.STATUS_ANY);
-
-			Assert.assertEquals(
-				WorkflowConstants.STATUS_EXPIRED, kbArticle.getStatus());
-		}
+		Assert.assertEquals(
+			WorkflowConstants.STATUS_EXPIRED, kbArticle.getStatus());
 	}
 
 	@DeleteAfterTestRun
