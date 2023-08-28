@@ -33,6 +33,7 @@ import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
@@ -50,6 +51,7 @@ import org.junit.runner.RunWith;
 /**
  * @author Alicia García
  */
+@FeatureFlags("LPS-188060")
 @RunWith(Arquillian.class)
 @Sync
 public class CheckKBArticleSchedulerJobConfigurationTest {
