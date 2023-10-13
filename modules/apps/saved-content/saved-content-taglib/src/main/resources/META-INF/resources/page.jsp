@@ -6,3 +6,21 @@
 --%>
 
 <%@ include file="/init.jsp" %>
+
+<div>
+	<clay:button
+		disabled="<%= true %>"
+		displayType="secondary"
+		monospaced="<%= true %>"
+		small="<%= true %>"
+	>
+		<clay:icon
+			symbol="bookmarks"
+		/>
+	</clay:button>
+
+	<react:component
+		module="js/savedContent"
+		props='<%= (Map<String, Object>)request.getAttribute("liferay-saved-content:saved-content:data") %>'
+	/>
+</div>

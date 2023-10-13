@@ -5,8 +5,12 @@
  */
 --%>
 
-<%@ taglib uri="http://liferay.com/tld/frontend" prefix="liferay-frontend" %><%@
+<%@ taglib uri="http://liferay.com/tld/clay" prefix="clay" %><%@
+taglib uri="http://liferay.com/tld/frontend" prefix="liferay-frontend" %><%@
+taglib uri="http://liferay.com/tld/react" prefix="react" %><%@
 taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %>
+
+<%@ page import="java.util.Map" %>
 
 <liferay-frontend:defineObjects />
 
