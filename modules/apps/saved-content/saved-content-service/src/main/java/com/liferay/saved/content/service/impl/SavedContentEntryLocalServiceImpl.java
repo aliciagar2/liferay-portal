@@ -15,10 +15,9 @@ import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.saved.content.exception.DuplicateSavedContentEntryException;
+import com.liferay.saved.content.exception.NoSuchSavedContentEntryException;
 import com.liferay.saved.content.model.SavedContentEntry;
 import com.liferay.saved.content.service.base.SavedContentEntryLocalServiceBaseImpl;
-
-import java.util.Date;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -36,19 +35,22 @@ public class SavedContentEntryLocalServiceImpl
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public SavedContentEntry addSavedContentEntry(
-			long groupId, long userId, String className, long classPK,
+			long userId, long groupId, String className, long classPK,
 			ServiceContext serviceContext)
 		throws PortalException {
 
 		long classNameId = _classNameLocalService.getClassNameId(className);
 
-		_validate(groupId, userId, classNameId, classPK);
-
-		long savedContentEntryId = counterLocalService.increment(
-			SavedContentEntry.class.getName());
-
 		SavedContentEntry savedContentEntry =
-			savedContentEntryPersistence.create(savedContentEntryId);
+			savedContentEntryPersistence.fetchByG_U_C_C(
+				groupId, userId, classNameId, classPK);
+
+		if (savedContentEntry != null) {
+			throw new DuplicateSavedContentEntryException();
+		}
+
+		savedContentEntry = savedContentEntryPersistence.create(
+			counterLocalService.increment(SavedContentEntry.class.getName()));
 
 		savedContentEntry.setGroupId(groupId);
 
@@ -57,18 +59,11 @@ public class SavedContentEntryLocalServiceImpl
 		savedContentEntry.setUserId(user.getUserId());
 		savedContentEntry.setUserName(user.getFullName());
 
-		Date date = new Date();
-
-		savedContentEntry.setCreateDate(date);
-		savedContentEntry.setModifiedDate(date);
-
 		savedContentEntry.setClassNameId(classNameId);
 		savedContentEntry.setClassPK(classPK);
 
 		savedContentEntry = savedContentEntryPersistence.update(
 			savedContentEntry);
-
-		// Resources
 
 		if (serviceContext.isAddGroupPermissions() ||
 			serviceContext.isAddGuestPermissions()) {
@@ -108,24 +103,21 @@ public class SavedContentEntryLocalServiceImpl
 
 	@Override
 	public SavedContentEntry fetchSavedContentEntry(
-		long groupId, long userId, String className, long classPK) {
+		long userId, long groupId, String className, long classPK) {
 
 		return savedContentEntryPersistence.fetchByG_U_C_C(
 			groupId, userId, _classNameLocalService.getClassNameId(className),
 			classPK);
 	}
 
-	private void _validate(
-			long groupId, long userId, long classNameId, long classPK)
-		throws DuplicateSavedContentEntryException {
+	@Override
+	public SavedContentEntry getSavedContentEntry(
+			long userId, long groupId, String className, long classPK)
+		throws NoSuchSavedContentEntryException {
 
-		SavedContentEntry savedContentEntry =
-			savedContentEntryPersistence.fetchByG_U_C_C(
-				groupId, userId, classNameId, classPK);
-
-		if (savedContentEntry != null) {
-			throw new DuplicateSavedContentEntryException();
-		}
+		return savedContentEntryPersistence.findByG_U_C_C(
+			groupId, userId, _classNameLocalService.getClassNameId(className),
+			classPK);
 	}
 
 	@Reference
