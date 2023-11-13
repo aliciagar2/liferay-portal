@@ -94,6 +94,19 @@ public class SavedContentEntryLocalServiceImpl
 	}
 
 	@Override
+	public void deleteSavedContentEntries(
+		long groupId, long classNameId, long classPK) {
+
+		savedContentEntryPersistence.removeByG_C_C(
+			groupId, classNameId, classPK);
+	}
+
+	@Override
+	public void deleteSavedContentEntriesByUserId(long userId) {
+		savedContentEntryPersistence.removeByUserId(userId);
+	}
+
+	@Override
 	public SavedContentEntry fetchSavedContentEntry(
 		long groupId, long userId, String className, long classPK) {
 
