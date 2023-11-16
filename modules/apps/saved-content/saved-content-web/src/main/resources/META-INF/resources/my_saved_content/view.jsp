@@ -31,45 +31,54 @@ MySavedContentDisplayContext mySavedContentDisplayContext = new MySavedContentDi
 			keyProperty="savedContentEntryId"
 			modelVar="savedContentEntry"
 		>
-			<liferay-ui:search-container-column-text
-				cssClass="table-cell-expand table-cell-minw-200"
-				name="title"
-				value="<%= mySavedContentDisplayContext.getAssetTitle(savedContentEntry.getClassName(), savedContentEntry.getClassPK()) %>"
-			/>
 
-			<div class="autofit-row">
-				<div class="autofit-col autofit-col-expand pl-1">
-					<div class="table-title">
+			<%
+			String assetTitle = mySavedContentDisplayContext.getAssetTitle(savedContentEntry.getClassName(), savedContentEntry.getClassPK());
+			%>
+
+			<liferay-ui:search-container-column-text
+				cssClass="table-cell-expand"
+			>
+				<p class="list-group-title"><%= assetTitle %></p>
+				<p class="list-group-subtitle"><%= ResourceActionsUtil.getModelResource(locale, savedContentEntry.getClassName()) %></p>
+			</liferay-ui:search-container-column-text>
+
+			<liferay-ui:search-container-column-text
+				cssClass="table-cell-expand-smallest"
+			>
+				<div class="btn-group">
+					<div class="btn-group-item">
+						<clay:link
+							aria-label='<%= LanguageUtil.format(request, "open-x-in-a-new-tab", HtmlUtil.escapeAttribute(assetTitle)) %>'
+							borderless="<%= true %>"
+							cssClass="lfr-portal-tooltip"
+							displayType="secondary"
+							href="<%= mySavedContentDisplayContext.getURL(savedContentEntry.getClassName(), savedContentEntry.getClassPK()) %>"
+							icon="shortcut"
+							monospaced="<%= true %>"
+							small="<%= true %>"
+							target="_blank"
+							title='<%= LanguageUtil.format(request, "open-x-in-a-new-tab", HtmlUtil.escapeAttribute(assetTitle)) %>'
+							type="button"
+						/>
+					</div>
+
+					<div class="btn-group-item">
+						<clay:link
+							aria-label='<%= LanguageUtil.format(request, "remove-x", HtmlUtil.escapeAttribute(assetTitle)) %>'
+							borderless="<%= true %>"
+							cssClass="lfr-portal-tooltip"
+							displayType="secondary"
+							href="<%= mySavedContentDisplayContext.getRemoveSavedContentURL(savedContentEntry.getClassName(), savedContentEntry.getClassPK()) %>"
+							icon="trash"
+							monospaced="<%= true %>"
+							small="<%= true %>"
+							title='<%= LanguageUtil.format(request, "remove-x", HtmlUtil.escapeAttribute(assetTitle)) %>'
+							type="button"
+						/>
 					</div>
 				</div>
-			</div>
-
-			<liferay-ui:search-container-column-text
-				name="description"
-				value="<%= ResourceActionsUtil.getModelResource(locale, savedContentEntry.getClassName()) %>"
-			/>
-
-			<liferay-ui:search-container-column-icon
-				href="<%= mySavedContentDisplayContext.getURL(savedContentEntry.getClassName(), savedContentEntry.getClassPK()) %>"
-				icon="shortcut"
-				name="icon"
-			/>
-
-			<liferay-ui:search-container-column-text
-				href="<%= mySavedContentDisplayContext.getURL(savedContentEntry.getClassName(), savedContentEntry.getClassPK()) %>"
-				name="url"
-				value="url"
-			/>
-
-			<liferay-ui:search-container-column-icon
-				icon="trash"
-			/>
-
-			<liferay-ui:search-container-column-text
-				href="<%= mySavedContentDisplayContext.getRemoveSavedContentURL(savedContentEntry.getClassName(), savedContentEntry.getClassPK()) %>"
-				name="trash"
-				value="trash"
-			/>
+			</liferay-ui:search-container-column-text>
 		</liferay-ui:search-container-row>
 
 		<liferay-ui:search-iterator
