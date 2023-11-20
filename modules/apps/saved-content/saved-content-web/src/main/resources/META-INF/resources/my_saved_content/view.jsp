@@ -33,13 +33,8 @@ MySavedContentDisplayContext mySavedContentDisplayContext = new MySavedContentDi
 		>
 
 			<%
-				AssetRenderer<?> assetRenderer =
-					mySavedContentDisplayContext.getAssetRenderer(
-						savedContentEntry.getClassName(),
-						savedContentEntry.getClassPK());
-%>
+			AssetRenderer<?> assetRenderer = mySavedContentDisplayContext.getAssetRenderer(savedContentEntry.getClassName(), savedContentEntry.getClassPK());
 
-				String assetTitle = mySavedContentDisplayContext.getAssetTitle(assetRenderer);
 			String assetTitle = mySavedContentDisplayContext.getAssetTitle(assetRenderer);
 			%>
 
