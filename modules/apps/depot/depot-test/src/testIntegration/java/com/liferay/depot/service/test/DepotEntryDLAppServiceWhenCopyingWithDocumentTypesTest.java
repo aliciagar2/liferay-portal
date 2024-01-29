@@ -176,7 +176,7 @@ public class DepotEntryDLAppServiceWhenCopyingWithDocumentTypesTest {
 			RandomTestUtil.randomString(), _group.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, _FILE_NAME,
 			ContentTypes.TEXT_PLAIN, _FILE_NAME, StringPool.BLANK,
-			StringPool.BLANK, StringPool.BLANK, new byte[0], null, null,
+			StringPool.BLANK, StringPool.BLANK, new byte[0], null, null, null,
 			serviceContext);
 
 		DLFileEntry dlFileEntry1 = (DLFileEntry)fileEntry1.getModel();

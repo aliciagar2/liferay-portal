@@ -76,7 +76,8 @@ public class CheckFileEntryMessageListenerTest {
 			RandomTestUtil.randomString(),
 			ContentTypes.APPLICATION_OCTET_STREAM,
 			RandomTestUtil.randomString(), null, RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), (byte[])null, expirationDate, null,
+			RandomTestUtil.randomString(), (byte[])null, null, expirationDate,
+			null,
 			ServiceContextTestUtil.getServiceContext(
 				_group.getGroupId(), TestPropsValues.getUserId()));
 

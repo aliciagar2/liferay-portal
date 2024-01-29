@@ -66,7 +66,8 @@ public class FriendlyURLDLAppLocalServiceWrapperTest extends BaseDLAppTestCase {
 			parentFolder.getFolderId(), RandomTestUtil.randomString(),
 			ContentTypes.TEXT_PLAIN, RandomTestUtil.randomString(), "urltitle",
 			StringPool.BLANK, StringPool.BLANK,
-			TestDataConstants.TEST_BYTE_ARRAY, null, null, serviceContext);
+			TestDataConstants.TEST_BYTE_ARRAY, null, null, null,
+			serviceContext);
 
 		FriendlyURLEntry friendlyURLEntry =
 			_friendlyURLEntryLocalService.getMainFriendlyURLEntry(
@@ -91,7 +92,7 @@ public class FriendlyURLDLAppLocalServiceWrapperTest extends BaseDLAppTestCase {
 			FileUtil.createTempFile(
 				new UnsyncByteArrayInputStream(
 					TestDataConstants.TEST_BYTE_ARRAY)),
-			null, null, serviceContext);
+			null, null, null, serviceContext);
 
 		FriendlyURLEntry friendlyURLEntry =
 			_friendlyURLEntryLocalService.getMainFriendlyURLEntry(
@@ -116,7 +117,7 @@ public class FriendlyURLDLAppLocalServiceWrapperTest extends BaseDLAppTestCase {
 			ContentTypes.TEXT_PLAIN, RandomTestUtil.randomString(), "urltitle",
 			StringPool.BLANK, StringPool.BLANK,
 			new UnsyncByteArrayInputStream(TestDataConstants.TEST_BYTE_ARRAY),
-			0, null, null, serviceContext);
+			0, null, null, null, serviceContext);
 
 		FriendlyURLEntry friendlyURLEntry =
 			_friendlyURLEntryLocalService.getMainFriendlyURLEntry(
@@ -142,7 +143,7 @@ public class FriendlyURLDLAppLocalServiceWrapperTest extends BaseDLAppTestCase {
 			parentFolder.getFolderId(), RandomTestUtil.randomString(),
 			ContentTypes.TEXT_PLAIN, RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(), StringPool.BLANK, StringPool.BLANK,
-			bytes, null, null, serviceContext);
+			bytes, null, null, null, serviceContext);
 
 		fileEntry = _dlAppLocalService.updateFileEntry(
 			serviceContext.getUserId(), fileEntry.getFileEntryId(),
@@ -175,7 +176,7 @@ public class FriendlyURLDLAppLocalServiceWrapperTest extends BaseDLAppTestCase {
 			parentFolder.getFolderId(), RandomTestUtil.randomString(),
 			ContentTypes.TEXT_PLAIN, RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(), StringPool.BLANK, StringPool.BLANK,
-			file, null, null, serviceContext);
+			file, null, null, null, serviceContext);
 
 		fileEntry = _dlAppLocalService.updateFileEntry(
 			serviceContext.getUserId(), fileEntry.getFileEntryId(),
@@ -209,7 +210,7 @@ public class FriendlyURLDLAppLocalServiceWrapperTest extends BaseDLAppTestCase {
 			parentFolder.getFolderId(), RandomTestUtil.randomString(),
 			ContentTypes.TEXT_PLAIN, RandomTestUtil.randomString(), "urltitle",
 			StringPool.BLANK, StringPool.BLANK, inputStream, size, null, null,
-			serviceContext);
+			null, serviceContext);
 
 		fileEntry = _dlAppLocalService.updateFileEntry(
 			serviceContext.getUserId(), fileEntry.getFileEntryId(),
