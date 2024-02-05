@@ -184,7 +184,7 @@ public class FriendlyURLDLAppServiceWrapperTest extends BaseDLAppTestCase {
 			ContentTypes.APPLICATION_OCTET_STREAM,
 			RandomTestUtil.randomString(), "urltitle", StringPool.BLANK,
 			StringPool.BLANK, DLVersionNumberIncrease.MAJOR, file, null, null,
-			serviceContext);
+			null, serviceContext);
 
 		FriendlyURLEntry friendlyURLEntry =
 			_friendlyURLEntryLocalService.getMainFriendlyURLEntry(
@@ -218,7 +218,7 @@ public class FriendlyURLDLAppServiceWrapperTest extends BaseDLAppTestCase {
 			ContentTypes.APPLICATION_OCTET_STREAM,
 			RandomTestUtil.randomString(), "urltitle", StringPool.BLANK,
 			StringPool.BLANK, DLVersionNumberIncrease.MAJOR, inputStream, size,
-			null, null, serviceContext);
+			null, null, null, serviceContext);
 
 		FriendlyURLEntry friendlyURLEntry =
 			_friendlyURLEntryLocalService.getMainFriendlyURLEntry(
@@ -250,7 +250,7 @@ public class FriendlyURLDLAppServiceWrapperTest extends BaseDLAppTestCase {
 			ContentTypes.APPLICATION_OCTET_STREAM,
 			RandomTestUtil.randomString(), "urltitle", StringPool.BLANK,
 			StringPool.BLANK, DLVersionNumberIncrease.MAJOR, bytes, null, null,
-			serviceContext);
+			null, serviceContext);
 
 		FriendlyURLEntry friendlyURLEntry =
 			_friendlyURLEntryLocalService.getMainFriendlyURLEntry(
@@ -283,7 +283,7 @@ public class FriendlyURLDLAppServiceWrapperTest extends BaseDLAppTestCase {
 			ContentTypes.APPLICATION_OCTET_STREAM,
 			RandomTestUtil.randomString(), "urltitle", StringPool.BLANK,
 			StringPool.BLANK, DLVersionNumberIncrease.MAJOR, file, null, null,
-			serviceContext);
+			null, serviceContext);
 
 		FriendlyURLEntry friendlyURLEntry =
 			_friendlyURLEntryLocalService.getMainFriendlyURLEntry(
@@ -317,7 +317,7 @@ public class FriendlyURLDLAppServiceWrapperTest extends BaseDLAppTestCase {
 			ContentTypes.APPLICATION_OCTET_STREAM,
 			RandomTestUtil.randomString(), "urltitle", StringPool.BLANK,
 			StringPool.BLANK, DLVersionNumberIncrease.MAJOR, inputStream, size,
-			null, null, serviceContext);
+			null, null, null, serviceContext);
 
 		FriendlyURLEntry friendlyURLEntry =
 			_friendlyURLEntryLocalService.getMainFriendlyURLEntry(
