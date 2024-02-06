@@ -12,7 +12,6 @@ import com.liferay.document.library.kernel.model.DLFileEntryMetadata;
 import com.liferay.document.library.kernel.model.DLFileEntryType;
 import com.liferay.document.library.kernel.model.DLFileEntryTypeConstants;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
-import com.liferay.document.library.kernel.service.DLAppService;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService;
 import com.liferay.document.library.test.util.BaseDLAppTestCase;
 import com.liferay.dynamic.data.mapping.constants.DDMStructureConstants;
@@ -364,9 +363,6 @@ public class DLAppServiceWhenCopyingWithDocumentTypesTest
 			new long[] {targetGroup.getGroupId()},
 			ServiceContextTestUtil.getServiceContext(group.getGroupId()));
 	}
-
-	@Inject
-	private static DLAppService _dlAppService;
 
 	@Inject
 	private static DLFileEntryTypeLocalService _dlFileEntryTypeLocalService;
