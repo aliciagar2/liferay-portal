@@ -123,13 +123,13 @@ public class EditFileEntryMVCActionCommandTest {
 			_editFileEntryMVCActionCommand, "_addMultipleFileEntries",
 			new Class<?>[] {
 				PortletConfig.class, ActionRequest.class, String.class,
-				List.class, List.class, Date.class, Date.class,
+				List.class, List.class, Date.class, Date.class, Date.class,
 				ServiceContext.class
 			},
 			_getLiferayPortletConfig(),
 			_getMockLiferayPortletActionRequest(parameters),
 			tempFileEntry.getFileName(), new ArrayList<>(), new ArrayList<>(),
-			null, null, ServiceContextTestUtil.getServiceContext());
+			null, null, null, ServiceContextTestUtil.getServiceContext());
 
 		FileEntry fileName = _dlAppLocalService.getFileEntryByFileName(
 			_group.getGroupId(), folderId, "image.jpg");
@@ -181,13 +181,13 @@ public class EditFileEntryMVCActionCommandTest {
 				_editFileEntryMVCActionCommand, "_addMultipleFileEntries",
 				new Class<?>[] {
 					PortletConfig.class, ActionRequest.class, String.class,
-					List.class, List.class, Date.class, Date.class,
+					List.class, List.class, Date.class, Date.class, Date.class,
 					ServiceContext.class
 				},
 				_getLiferayPortletConfig(),
 				_getMockLiferayPortletActionRequest(parameters),
 				selectedFileName, new ArrayList<>(), new ArrayList<>(), null,
-				null, ServiceContextTestUtil.getServiceContext());
+				null, null, ServiceContextTestUtil.getServiceContext());
 		}
 
 		FileEntry fileEntry = _dlAppLocalService.getFileEntryByFileName(
@@ -246,13 +246,13 @@ public class EditFileEntryMVCActionCommandTest {
 				_editFileEntryMVCActionCommand, "_addMultipleFileEntries",
 				new Class<?>[] {
 					PortletConfig.class, ActionRequest.class, String.class,
-					List.class, List.class, Date.class, Date.class,
+					List.class, List.class, Date.class, Date.class, Date.class,
 					ServiceContext.class
 				},
 				_getLiferayPortletConfig(),
 				_getMockLiferayPortletActionRequest(parameters),
 				selectedFileName, new ArrayList<>(), new ArrayList<>(), null,
-				null, ServiceContextTestUtil.getServiceContext());
+				null, null, ServiceContextTestUtil.getServiceContext());
 		}
 
 		FileEntry fileEntry = _dlAppLocalService.getFileEntryByFileName(
@@ -311,13 +311,13 @@ public class EditFileEntryMVCActionCommandTest {
 				_editFileEntryMVCActionCommand, "_addMultipleFileEntries",
 				new Class<?>[] {
 					PortletConfig.class, ActionRequest.class, String.class,
-					List.class, List.class, Date.class, Date.class,
+					List.class, List.class, Date.class, Date.class, Date.class,
 					ServiceContext.class
 				},
 				_getLiferayPortletConfig(),
 				_getMockLiferayPortletActionRequest(parameters),
 				selectedFileName, new ArrayList<>(), new ArrayList<>(), null,
-				null, ServiceContextTestUtil.getServiceContext());
+				null, null, ServiceContextTestUtil.getServiceContext());
 		}
 
 		FileEntry fileEntry = _dlAppLocalService.getFileEntryByFileName(
