@@ -6,63 +6,132 @@
 import {expect, mergeTests} from '@playwright/test';
 
 import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
-import {knowledgeBasePages} from '../../fixtures/knowldegbeBasePages';
+import {featureFlagsTest} from '../../fixtures/featureFlagsTest';
+import {knowledgeBasePages} from '../../fixtures/knowledgeBasePages';
 import {loginTest} from '../../fixtures/loginTest';
 import {getRandomString} from '../../utils/util';
 
-export const test = mergeTests(apiHelpersTest, knowledgeBasePages, loginTest);
+const testFeatureFlagsEnabled = mergeTests(
+	loginTest,
+	apiHelpersTest,
+	featureFlagsTest({
+		'LPS-188058': true,
+	}),
+	knowledgeBasePages
+);
 
-test('can publish and delete an article', async ({
-	apiHelpers,
-	knowledgeBaseEditArticle,
-	knowledgeBasePage,
-	page,
-}) => {
-	await apiHelpers.featureFlag.updateFeatureFlag('LPS-188058', false);
+const testFeatureFlagsDisabled = mergeTests(
+	loginTest,
+	apiHelpersTest,
+	featureFlagsTest({
+		'LPS-188058': false,
+	}),
+	knowledgeBasePages
+);
 
-	const content = getRandomString();
-	const title = getRandomString();
-	const kbArticle = page.getByRole('link', {name: title});
+testFeatureFlagsDisabled(
+	'can publish and delete an article with scheduling disabled',
+	async ({knowledgeBaseEditArticlePage, knowledgeBasePage, page}) => {
+		const content = getRandomString();
+		const title = getRandomString();
+		const kbArticle = page.getByRole('link', {name: title});
 
-	await knowledgeBaseEditArticle.publishNewKnowledgeBaseArticle(
-		content,
-		title
-	);
-	await expect(kbArticle).toBeVisible();
+		await knowledgeBaseEditArticlePage.publishNewKnowledgeBaseArticle(
+			content,
+			title
+		);
+		await expect(kbArticle).toBeVisible();
 
-	await knowledgeBasePage.deleteKnowledgeBaseArticle(title);
-	await expect(kbArticle).toBeHidden();
+		await knowledgeBasePage.deleteKnowledgeBaseArticle(title);
+		await expect(kbArticle).toBeHidden();
+	}
+);
 
-	await page.close();
-});
+testFeatureFlagsEnabled(
+	'can publish and delete an article with scheduling enabled',
+	async ({
+		knowledgeBaseEditArticlePage,
+		knowledgeBaseViewArticlePage,
+		page,
+	}) => {
+		const content = getRandomString();
+		const title = getRandomString();
+		const kbArticle = page.getByRole('link', {name: title});
 
-test('can schedule the publication of an article and delete it afterward', async ({
-	apiHelpers,
-	knowledgeBaseEditArticle,
-	knowledgeBaseViewArticlePage,
-	page,
-}) => {
-	await apiHelpers.featureFlag.updateFeatureFlag('LPS-188058', true);
+		await knowledgeBaseEditArticlePage.publishNewKnowledgeBaseArticleWithSchedule(
+			content,
+			title
+		);
+		await expect(kbArticle).toBeVisible();
 
-	const content = getRandomString();
-	const title = getRandomString();
-	const kbArticle = page.getByRole('link', {name: title});
+		await knowledgeBaseViewArticlePage.deleteKnowledgeBaseArticle(title);
+		await expect(
+			page.locator(
+				'[id="_com_liferay_knowledge_base_web_portlet_AdminPortlet_recycleBinAlert"]'
+			)
+		).toBeVisible();
+		await expect(kbArticle).toBeHidden();
+	}
+);
 
-	await knowledgeBaseEditArticle.publishNewKnowledgeBaseArticleWithSchedule(
-		content,
-		title
-	);
-	await expect(kbArticle).toBeVisible();
+testFeatureFlagsDisabled(
+	'can delete all articles with a recycle bin disabled',
+	async ({knowledgeBaseEditArticlePage, knowledgeBasePage, page}) => {
+		await knowledgeBaseEditArticlePage.publishNewKnowledgeBaseArticle(
+			getRandomString(),
+			getRandomString()
+		);
 
-	await knowledgeBaseViewArticlePage.deleteKnowledgeBaseArticle(title);
-	await expect(
-		page.locator(
-			'[id="_com_liferay_knowledge_base_web_portlet_AdminPortlet_recycleBinAlert"]'
-		)
-	).toBeVisible();
-	await expect(kbArticle).toBeHidden();
+		await knowledgeBasePage.deleteAll(false);
+		await expect(
+			page.getByRole('heading', {name: 'Knowledge base is empty.'})
+		).toBeVisible();
+	}
+);
 
-	await apiHelpers.featureFlag.updateFeatureFlag('LPS-188058', false);
+testFeatureFlagsEnabled(
+	'can delete all articles with a recycle bin enabled',
+	async ({knowledgeBaseEditArticlePage, knowledgeBasePage, page}) => {
+		await knowledgeBaseEditArticlePage.publishNewKnowledgeBaseArticleWithSchedule(
+			getRandomString(),
+			getRandomString()
+		);
 
-	await page.close();
-});
+		await knowledgeBasePage.deleteAll(true);
+		await expect(
+			page.locator(
+				'[id="_com_liferay_knowledge_base_web_portlet_AdminPortlet_recycleBinAlert"]'
+			)
+		).toBeVisible();
+		await expect(
+			page.getByRole('heading', {name: 'Knowledge base is empty.'})
+		).toBeVisible();
+	}
+);
+
+testFeatureFlagsEnabled(
+	'can schedule and delete an article with scheduling enabled',
+	async ({
+		knowledgeBaseEditArticlePage,
+		knowledgeBaseViewArticlePage,
+		page,
+	}) => {
+		const title = getRandomString();
+		const kbArticle = page.getByRole('link', {name: title});
+
+		await knowledgeBaseEditArticlePage.scheduleNewKnowledgeBaseArticle(
+			getRandomString(),
+			`${new Date().getFullYear() + 1}-01-01 00:00`,
+			title
+		);
+		await expect(kbArticle).toBeVisible();
+
+		await knowledgeBaseViewArticlePage.deleteKnowledgeBaseArticle(title);
+		await expect(
+			page.locator(
+				'[id="_com_liferay_knowledge_base_web_portlet_AdminPortlet_recycleBinAlert"]'
+			)
+		).toBeVisible();
+		await expect(kbArticle).toBeHidden();
+	}
+);

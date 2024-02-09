@@ -13,6 +13,9 @@ export class KnowledgeBaseEditArticlePage {
 	readonly page: Page;
 	readonly publishButton: Locator;
 	readonly publishMenuItem: Locator;
+	readonly scheduleButton: Locator;
+	readonly scheduleDatePlaceholder: Locator;
+	readonly scheduleMenuItem: Locator;
 	readonly titlePlaceholder: Locator;
 
 	knowledgeBasePage: KnowledgeBasePage;
@@ -23,6 +26,12 @@ export class KnowledgeBaseEditArticlePage {
 		this.knowledgeBasePage = new KnowledgeBasePage(page);
 		this.publishButton = page.getByRole('button', {name: 'Publish'});
 		this.publishMenuItem = page.getByRole('menuitem', {name: 'Publish'});
+		this.scheduleButton = page.getByRole('button', {name: 'Schedule'});
+		this.scheduleDatePlaceholder =
+			page.getByPlaceholder('yyyy-MM-dd HH:mm');
+		this.scheduleMenuItem = page.getByRole('menuitem', {
+			name: 'Schedule Publication',
+		});
 		this.titlePlaceholder = page.getByPlaceholder('Untitled Article');
 		this.page = page;
 	}
@@ -48,5 +57,23 @@ export class KnowledgeBaseEditArticlePage {
 		await this.publishButton.click();
 		await this.publishMenuItem.waitFor();
 		await this.publishMenuItem.click();
+	}
+
+	async scheduleNewKnowledgeBaseArticle(
+		content: string,
+		scheduleDate: string,
+		title: string
+	) {
+		await this.goto();
+		await this.titlePlaceholder.fill(title);
+		await this.contentTextBox.fill(content);
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: this.scheduleMenuItem,
+			trigger: this.publishButton,
+		});
+		await this.scheduleDatePlaceholder.click();
+		await this.scheduleDatePlaceholder.fill(scheduleDate);
+		await this.scheduleButton.click();
 	}
 }
