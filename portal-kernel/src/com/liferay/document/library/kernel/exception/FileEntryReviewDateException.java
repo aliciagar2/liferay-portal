@@ -12,7 +12,7 @@
  * details.
  */
 
-package com.liferay.document.library.web.internal.exception;
+package com.liferay.document.library.kernel.exception;
 
 import com.liferay.portal.kernel.exception.PortalException;
 
