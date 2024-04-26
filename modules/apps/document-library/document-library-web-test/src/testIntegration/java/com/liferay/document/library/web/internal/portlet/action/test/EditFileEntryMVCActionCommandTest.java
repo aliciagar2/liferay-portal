@@ -24,6 +24,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Portlet;
+import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.LiferayPortletConfig;
 import com.liferay.portal.kernel.portlet.PortletConfigFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
@@ -43,6 +44,7 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.upload.UploadPortletRequest;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.TempFileEntryUtil;
@@ -50,6 +52,7 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+import com.liferay.portal.upload.test.util.UploadTestUtil;
 import com.liferay.portletmvc4spring.test.mock.web.portlet.MockPortletSession;
 
 import java.io.ByteArrayInputStream;
@@ -57,7 +60,7 @@ import java.io.InputStream;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -123,13 +126,23 @@ public class EditFileEntryMVCActionCommandTest {
 			_editFileEntryMVCActionCommand, "_addMultipleFileEntries",
 			new Class<?>[] {
 				PortletConfig.class, ActionRequest.class, String.class,
-				List.class, List.class, Date.class, Date.class, Date.class,
-				ServiceContext.class
+				List.class, List.class, Boolean.class, User.class,
+				UploadPortletRequest.class, ServiceContext.class
 			},
 			_getLiferayPortletConfig(),
 			_getMockLiferayPortletActionRequest(parameters),
 			tempFileEntry.getFileName(), new ArrayList<>(), new ArrayList<>(),
-			null, null, null, ServiceContextTestUtil.getServiceContext());
+			true, TestPropsValues.getUser(),
+			UploadTestUtil.createUploadPortletRequest(
+				UploadTestUtil.createUploadServletRequest(
+					new MockHttpServletRequest(), null,
+					HashMapBuilder.put(
+						"groupId",
+						Collections.singletonList(
+							String.valueOf(_group.getGroupId()))
+					).build()),
+				null, RandomTestUtil.randomString()),
+			ServiceContextTestUtil.getServiceContext());
 
 		FileEntry fileName = _dlAppLocalService.getFileEntryByFileName(
 			_group.getGroupId(), folderId, "image.jpg");
@@ -176,18 +189,30 @@ public class EditFileEntryMVCActionCommandTest {
 			Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)
 		);
 
+		UploadPortletRequest uploadPortletRequest =
+			UploadTestUtil.createUploadPortletRequest(
+				UploadTestUtil.createUploadServletRequest(
+					new MockHttpServletRequest(), null,
+					HashMapBuilder.put(
+						"groupId",
+						Collections.singletonList(
+							String.valueOf(_group.getGroupId()))
+					).build()),
+				null, RandomTestUtil.randomString());
+
 		for (String selectedFileName : selectedFileNames) {
 			ReflectionTestUtil.invoke(
 				_editFileEntryMVCActionCommand, "_addMultipleFileEntries",
 				new Class<?>[] {
 					PortletConfig.class, ActionRequest.class, String.class,
-					List.class, List.class, Date.class, Date.class, Date.class,
-					ServiceContext.class
+					List.class, List.class, Boolean.class, User.class,
+					UploadPortletRequest.class, ServiceContext.class
 				},
 				_getLiferayPortletConfig(),
 				_getMockLiferayPortletActionRequest(parameters),
-				selectedFileName, new ArrayList<>(), new ArrayList<>(), null,
-				null, null, ServiceContextTestUtil.getServiceContext());
+				selectedFileName, new ArrayList<>(), new ArrayList<>(), true,
+				TestPropsValues.getUser(), uploadPortletRequest,
+				ServiceContextTestUtil.getServiceContext());
 		}
 
 		FileEntry fileEntry = _dlAppLocalService.getFileEntryByFileName(
@@ -241,18 +266,30 @@ public class EditFileEntryMVCActionCommandTest {
 			Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)
 		);
 
+		UploadPortletRequest uploadPortletRequest =
+			UploadTestUtil.createUploadPortletRequest(
+				UploadTestUtil.createUploadServletRequest(
+					new MockHttpServletRequest(), null,
+					HashMapBuilder.put(
+						"groupId",
+						Collections.singletonList(
+							String.valueOf(_group.getGroupId()))
+					).build()),
+				null, RandomTestUtil.randomString());
+
 		for (String selectedFileName : selectedFileNames) {
 			ReflectionTestUtil.invoke(
 				_editFileEntryMVCActionCommand, "_addMultipleFileEntries",
 				new Class<?>[] {
 					PortletConfig.class, ActionRequest.class, String.class,
-					List.class, List.class, Date.class, Date.class, Date.class,
-					ServiceContext.class
+					List.class, List.class, Boolean.class, User.class,
+					UploadPortletRequest.class, ServiceContext.class
 				},
 				_getLiferayPortletConfig(),
 				_getMockLiferayPortletActionRequest(parameters),
-				selectedFileName, new ArrayList<>(), new ArrayList<>(), null,
-				null, null, ServiceContextTestUtil.getServiceContext());
+				selectedFileName, new ArrayList<>(), new ArrayList<>(), true,
+				TestPropsValues.getUser(), uploadPortletRequest,
+				ServiceContextTestUtil.getServiceContext());
 		}
 
 		FileEntry fileEntry = _dlAppLocalService.getFileEntryByFileName(
@@ -306,18 +343,30 @@ public class EditFileEntryMVCActionCommandTest {
 			Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)
 		);
 
+		UploadPortletRequest uploadPortletRequest =
+			UploadTestUtil.createUploadPortletRequest(
+				UploadTestUtil.createUploadServletRequest(
+					new MockHttpServletRequest(), null,
+					HashMapBuilder.put(
+						"groupId",
+						Collections.singletonList(
+							String.valueOf(_group.getGroupId()))
+					).build()),
+				null, RandomTestUtil.randomString());
+
 		for (String selectedFileName : selectedFileNames) {
 			ReflectionTestUtil.invoke(
 				_editFileEntryMVCActionCommand, "_addMultipleFileEntries",
 				new Class<?>[] {
 					PortletConfig.class, ActionRequest.class, String.class,
-					List.class, List.class, Date.class, Date.class, Date.class,
-					ServiceContext.class
+					List.class, List.class, Boolean.class, User.class,
+					UploadPortletRequest.class, ServiceContext.class
 				},
 				_getLiferayPortletConfig(),
 				_getMockLiferayPortletActionRequest(parameters),
-				selectedFileName, new ArrayList<>(), new ArrayList<>(), null,
-				null, null, ServiceContextTestUtil.getServiceContext());
+				selectedFileName, new ArrayList<>(), new ArrayList<>(), true,
+				TestPropsValues.getUser(), uploadPortletRequest,
+				ServiceContextTestUtil.getServiceContext());
 		}
 
 		FileEntry fileEntry = _dlAppLocalService.getFileEntryByFileName(
