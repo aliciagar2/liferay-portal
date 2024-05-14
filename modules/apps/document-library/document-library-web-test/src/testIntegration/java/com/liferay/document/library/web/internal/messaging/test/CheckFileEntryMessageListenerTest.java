@@ -16,13 +16,16 @@ package com.liferay.document.library.web.internal.messaging.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.document.library.kernel.model.DLFileEntry;
+import com.liferay.document.library.kernel.model.DLFileVersion;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.model.DLVersionNumberIncrease;
 import com.liferay.document.library.kernel.service.DLAppService;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
+import com.liferay.document.library.kernel.service.DLFileVersionLocalService;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
@@ -41,6 +44,7 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.util.Date;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -92,16 +96,30 @@ public class CheckFileEntryMessageListenerTest {
 
 		dlFileEntry = _dlFileEntryLocalService.updateDLFileEntry(dlFileEntry);
 
+		DLFileVersion dlFileVersion = dlFileEntry.getFileVersion();
+
+		dlFileVersion.setExpirationDate(expirationDate);
+
+		dlFileVersion = _dlFileVersionLocalService.updateDLFileVersion(
+			dlFileVersion);
+
 		Assert.assertEquals(
 			WorkflowConstants.STATUS_APPROVED, dlFileEntry.getStatus());
+		Assert.assertEquals(
+			WorkflowConstants.STATUS_APPROVED, dlFileVersion.getStatus());
 
 		_dlFileEntryLocalService.checkFileEntries(_group.getCompanyId(), 2);
 
 		dlFileEntry = _dlFileEntryLocalService.getFileEntry(
 			fileEntry.getFileEntryId());
 
+		dlFileVersion = dlFileEntry.getFileVersion();
+
 		Assert.assertEquals(
 			WorkflowConstants.STATUS_EXPIRED, dlFileEntry.getStatus());
+
+		Assert.assertEquals(
+			WorkflowConstants.STATUS_EXPIRED, dlFileVersion.getStatus());
 	}
 
 	@FeatureFlags("LPD-10701")
@@ -154,6 +172,9 @@ public class CheckFileEntryMessageListenerTest {
 
 	@Inject
 	private DLFileEntryLocalService _dlFileEntryLocalService;
+
+	@Inject
+	private DLFileVersionLocalService _dlFileVersionLocalService;
 
 	@DeleteAfterTestRun
 	private Group _group;
