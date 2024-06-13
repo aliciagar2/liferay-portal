@@ -63,6 +63,7 @@ testFeatureFlagsEnabled(
 			title
 		);
 		await expect(kbArticle).toBeVisible();
+		await expect(page.locator('.workflow-status-approved')).toBeVisible();
 
 		await knowledgeBaseViewArticlePage.deleteKnowledgeBaseArticle(title);
 		await expect(
@@ -125,6 +126,7 @@ testFeatureFlagsEnabled(
 			title
 		);
 		await expect(kbArticle).toBeVisible();
+		await expect(page.locator('.workflow-status-scheduled')).toBeVisible();
 
 		await knowledgeBaseViewArticlePage.deleteKnowledgeBaseArticle(title);
 		await expect(
