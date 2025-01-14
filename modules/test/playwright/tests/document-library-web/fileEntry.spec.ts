@@ -25,7 +25,7 @@ testFeatureFlagsEnabled(
 		const scheduleDate = `01/01/${new Date().getFullYear() + 1}`;
 		const title = getRandomString();
 
-		await documentLibraryEditFilePage.publishNewFileWithScheduleDate(
+		await documentLibraryEditFilePage.goToPublishNewFileWithScheduleDate(
 			scheduleDate,
 			title
 		);
