@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-package com.liferay.headless.delivery.dto.v1_0;
+package com.liferay.headless.object.dto.v1_0;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFilter;
@@ -12,14 +12,13 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 
+import com.liferay.headless.delivery.dto.v1_0.Creator;
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
-
-import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.io.Serializable;
 
@@ -41,7 +40,7 @@ import javax.validation.constraints.NotEmpty;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
- * @author Javier Gamarra
+ * @author Alicia García
  * @generated
  */
 @Generated("")
@@ -49,11 +48,11 @@ import javax.xml.bind.annotation.XmlRootElement;
 	description = "Represents a object entry folder that contains objects entries and other object entry folders.",
 	value = "ObjectEntryFolder"
 )
-@JsonFilter("Liferay.Vulcan")
-@Schema(
+@io.swagger.v3.oas.annotations.media.Schema(
 	description = "Represents a object entry folder that contains objects entries and other object entry folders.",
-	requiredProperties = {"name"}
+	requiredProperties = {"title"}
 )
+@JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "ObjectEntryFolder")
 public class ObjectEntryFolder implements Serializable {
 
@@ -65,7 +64,7 @@ public class ObjectEntryFolder implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(ObjectEntryFolder.class, json);
 	}
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "Block of actions allowed by the user making the request."
 	)
 	@Valid
@@ -112,52 +111,9 @@ public class ObjectEntryFolder implements Serializable {
 	@JsonIgnore
 	private Supplier<Map<String, Map<String, String>>> _actionsSupplier;
 
-	@Schema(
-		description = "The key of the asset library to which the object entry folder is scoped."
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The object entry folder's creator."
 	)
-	public String getAssetLibraryKey() {
-		if (_assetLibraryKeySupplier != null) {
-			assetLibraryKey = _assetLibraryKeySupplier.get();
-
-			_assetLibraryKeySupplier = null;
-		}
-
-		return assetLibraryKey;
-	}
-
-	public void setAssetLibraryKey(String assetLibraryKey) {
-		this.assetLibraryKey = assetLibraryKey;
-
-		_assetLibraryKeySupplier = null;
-	}
-
-	@JsonIgnore
-	public void setAssetLibraryKey(
-		UnsafeSupplier<String, Exception> assetLibraryKeyUnsafeSupplier) {
-
-		_assetLibraryKeySupplier = () -> {
-			try {
-				return assetLibraryKeyUnsafeSupplier.get();
-			}
-			catch (RuntimeException runtimeException) {
-				throw runtimeException;
-			}
-			catch (Exception exception) {
-				throw new RuntimeException(exception);
-			}
-		};
-	}
-
-	@GraphQLField(
-		description = "The key of the asset library to which the object entry folder is scoped."
-	)
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
-	protected String assetLibraryKey;
-
-	@JsonIgnore
-	private Supplier<String> _assetLibraryKeySupplier;
-
-	@Schema(description = "The object entry folder's creator.")
 	@Valid
 	public Creator getCreator() {
 		if (_creatorSupplier != null) {
@@ -199,7 +155,9 @@ public class ObjectEntryFolder implements Serializable {
 	@JsonIgnore
 	private Supplier<Creator> _creatorSupplier;
 
-	@Schema(description = "The object entry folder's creation date.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The object entry folder's creation date."
+	)
 	public Date getDateCreated() {
 		if (_dateCreatedSupplier != null) {
 			dateCreated = _dateCreatedSupplier.get();
@@ -240,7 +198,9 @@ public class ObjectEntryFolder implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _dateCreatedSupplier;
 
-	@Schema(description = "The last time a field of the folder changed.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The last time a field of the folder changed."
+	)
 	public Date getDateModified() {
 		if (_dateModifiedSupplier != null) {
 			dateModified = _dateModifiedSupplier.get();
@@ -281,7 +241,9 @@ public class ObjectEntryFolder implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _dateModifiedSupplier;
 
-	@Schema(description = "The object entry folder's external reference code.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The object entry folder's external reference code."
+	)
 	public String getExternalReferenceCode() {
 		if (_externalReferenceCodeSupplier != null) {
 			externalReferenceCode = _externalReferenceCodeSupplier.get();
@@ -324,7 +286,9 @@ public class ObjectEntryFolder implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _externalReferenceCodeSupplier;
 
-	@Schema(description = "The object entry folder's ID.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The object entry folder's ID."
+	)
 	public Long getId() {
 		if (_idSupplier != null) {
 			id = _idSupplier.get();
@@ -363,7 +327,9 @@ public class ObjectEntryFolder implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _idSupplier;
 
-	@Schema(description = "The object entry folder's label.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The object entry folder's label."
+	)
 	public String getLabel() {
 		if (_labelSupplier != null) {
 			label = _labelSupplier.get();
@@ -404,7 +370,9 @@ public class ObjectEntryFolder implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _labelSupplier;
 
-	@Schema(description = "The localized object entry folder's label.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The localized object entry folder's label."
+	)
 	@Valid
 	public Map<String, String> getLabel_i18n() {
 		if (_label_i18nSupplier != null) {
@@ -447,47 +415,7 @@ public class ObjectEntryFolder implements Serializable {
 	@JsonIgnore
 	private Supplier<Map<String, String>> _label_i18nSupplier;
 
-	@Schema(description = "The object entry folder's main title/name.")
-	public String getName() {
-		if (_nameSupplier != null) {
-			name = _nameSupplier.get();
-
-			_nameSupplier = null;
-		}
-
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-
-		_nameSupplier = null;
-	}
-
-	@JsonIgnore
-	public void setName(UnsafeSupplier<String, Exception> nameUnsafeSupplier) {
-		_nameSupplier = () -> {
-			try {
-				return nameUnsafeSupplier.get();
-			}
-			catch (RuntimeException runtimeException) {
-				throw runtimeException;
-			}
-			catch (Exception exception) {
-				throw new RuntimeException(exception);
-			}
-		};
-	}
-
-	@GraphQLField(description = "The object entry folder's main title/name.")
-	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	@NotEmpty
-	protected String name;
-
-	@JsonIgnore
-	private Supplier<String> _nameSupplier;
-
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The number of object entries in this object entry folder."
 	)
 	public Integer getNumberOfObjectEntries() {
@@ -533,7 +461,7 @@ public class ObjectEntryFolder implements Serializable {
 	@JsonIgnore
 	private Supplier<Integer> _numberOfObjectEntriesSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The number of this object entry folder's child object entry folders."
 	)
 	public Integer getNumberOfObjectEntryFolders() {
@@ -582,7 +510,110 @@ public class ObjectEntryFolder implements Serializable {
 	@JsonIgnore
 	private Supplier<Integer> _numberOfObjectEntryFoldersSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The object entry folder's parent, if it exists."
+	)
+	@Valid
+	public ParentObjectEntryFolderBrief getParentObjectEntryFolderBrief() {
+		if (_parentObjectEntryFolderBriefSupplier != null) {
+			parentObjectEntryFolderBrief =
+				_parentObjectEntryFolderBriefSupplier.get();
+
+			_parentObjectEntryFolderBriefSupplier = null;
+		}
+
+		return parentObjectEntryFolderBrief;
+	}
+
+	public void setParentObjectEntryFolderBrief(
+		ParentObjectEntryFolderBrief parentObjectEntryFolderBrief) {
+
+		this.parentObjectEntryFolderBrief = parentObjectEntryFolderBrief;
+
+		_parentObjectEntryFolderBriefSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setParentObjectEntryFolderBrief(
+		UnsafeSupplier<ParentObjectEntryFolderBrief, Exception>
+			parentObjectEntryFolderBriefUnsafeSupplier) {
+
+		_parentObjectEntryFolderBriefSupplier = () -> {
+			try {
+				return parentObjectEntryFolderBriefUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(
+		description = "The object entry folder's parent, if it exists."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected ParentObjectEntryFolderBrief parentObjectEntryFolderBrief;
+
+	@JsonIgnore
+	private Supplier<ParentObjectEntryFolderBrief>
+		_parentObjectEntryFolderBriefSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The parent entry folder's external reference code, if it exists."
+	)
+	public String getParentObjectEntryFolderExternalReferenceCode() {
+		if (_parentObjectEntryFolderExternalReferenceCodeSupplier != null) {
+			parentObjectEntryFolderExternalReferenceCode =
+				_parentObjectEntryFolderExternalReferenceCodeSupplier.get();
+
+			_parentObjectEntryFolderExternalReferenceCodeSupplier = null;
+		}
+
+		return parentObjectEntryFolderExternalReferenceCode;
+	}
+
+	public void setParentObjectEntryFolderExternalReferenceCode(
+		String parentObjectEntryFolderExternalReferenceCode) {
+
+		this.parentObjectEntryFolderExternalReferenceCode =
+			parentObjectEntryFolderExternalReferenceCode;
+
+		_parentObjectEntryFolderExternalReferenceCodeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setParentObjectEntryFolderExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			parentObjectEntryFolderExternalReferenceCodeUnsafeSupplier) {
+
+		_parentObjectEntryFolderExternalReferenceCodeSupplier = () -> {
+			try {
+				return parentObjectEntryFolderExternalReferenceCodeUnsafeSupplier.
+					get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(
+		description = "The parent entry folder's external reference code, if it exists."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String parentObjectEntryFolderExternalReferenceCode;
+
+	@JsonIgnore
+	private Supplier<String>
+		_parentObjectEntryFolderExternalReferenceCodeSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The ID of the object entry folder's parent, if it exists."
 	)
 	public Long getParentObjectEntryFolderId() {
@@ -629,10 +660,97 @@ public class ObjectEntryFolder implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _parentObjectEntryFolderIdSupplier;
 
-	@JsonGetter("viewableBy")
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The scope key of the object entry folder."
+	)
+	public String getScopeKey() {
+		if (_scopeKeySupplier != null) {
+			scopeKey = _scopeKeySupplier.get();
+
+			_scopeKeySupplier = null;
+		}
+
+		return scopeKey;
+	}
+
+	public void setScopeKey(String scopeKey) {
+		this.scopeKey = scopeKey;
+
+		_scopeKeySupplier = null;
+	}
+
+	@JsonIgnore
+	public void setScopeKey(
+		UnsafeSupplier<String, Exception> scopeKeyUnsafeSupplier) {
+
+		_scopeKeySupplier = () -> {
+			try {
+				return scopeKeyUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(description = "The scope key of the object entry folder.")
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String scopeKey;
+
+	@JsonIgnore
+	private Supplier<String> _scopeKeySupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The object entry folder's main title/name."
+	)
+	public String getTitle() {
+		if (_titleSupplier != null) {
+			title = _titleSupplier.get();
+
+			_titleSupplier = null;
+		}
+
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+
+		_titleSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setTitle(
+		UnsafeSupplier<String, Exception> titleUnsafeSupplier) {
+
+		_titleSupplier = () -> {
+			try {
+				return titleUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(description = "The object entry folder's main title/name.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	@NotEmpty
+	protected String title;
+
+	@JsonIgnore
+	private Supplier<String> _titleSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "A write-only property that specifies the object entry folder's default permissions."
 	)
+	@JsonGetter("viewableBy")
 	@Valid
 	public ViewableBy getViewableBy() {
 		if (_viewableBySupplier != null) {
@@ -729,22 +847,6 @@ public class ObjectEntryFolder implements Serializable {
 			sb.append(_toJSON(actions));
 		}
 
-		String assetLibraryKey = getAssetLibraryKey();
-
-		if (assetLibraryKey != null) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append("\"assetLibraryKey\": ");
-
-			sb.append("\"");
-
-			sb.append(_escape(assetLibraryKey));
-
-			sb.append("\"");
-		}
-
 		Creator creator = getCreator();
 
 		if (creator != null) {
@@ -754,7 +856,7 @@ public class ObjectEntryFolder implements Serializable {
 
 			sb.append("\"creator\": ");
 
-			sb.append(String.valueOf(creator));
+			sb.append(creator);
 		}
 
 		Date dateCreated = getDateCreated();
@@ -845,22 +947,6 @@ public class ObjectEntryFolder implements Serializable {
 			sb.append(_toJSON(label_i18n));
 		}
 
-		String name = getName();
-
-		if (name != null) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append("\"name\": ");
-
-			sb.append("\"");
-
-			sb.append(_escape(name));
-
-			sb.append("\"");
-		}
-
 		Integer numberOfObjectEntries = getNumberOfObjectEntries();
 
 		if (numberOfObjectEntries != null) {
@@ -885,6 +971,36 @@ public class ObjectEntryFolder implements Serializable {
 			sb.append(numberOfObjectEntryFolders);
 		}
 
+		ParentObjectEntryFolderBrief parentObjectEntryFolderBrief =
+			getParentObjectEntryFolderBrief();
+
+		if (parentObjectEntryFolderBrief != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"parentObjectEntryFolderBrief\": ");
+
+			sb.append(String.valueOf(parentObjectEntryFolderBrief));
+		}
+
+		String parentObjectEntryFolderExternalReferenceCode =
+			getParentObjectEntryFolderExternalReferenceCode();
+
+		if (parentObjectEntryFolderExternalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"parentObjectEntryFolderExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(parentObjectEntryFolderExternalReferenceCode));
+
+			sb.append("\"");
+		}
+
 		Long parentObjectEntryFolderId = getParentObjectEntryFolderId();
 
 		if (parentObjectEntryFolderId != null) {
@@ -895,6 +1011,38 @@ public class ObjectEntryFolder implements Serializable {
 			sb.append("\"parentObjectEntryFolderId\": ");
 
 			sb.append(parentObjectEntryFolderId);
+		}
+
+		String scopeKey = getScopeKey();
+
+		if (scopeKey != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"scopeKey\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(scopeKey));
+
+			sb.append("\"");
+		}
+
+		String title = getTitle();
+
+		if (title != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"title\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(title));
+
+			sb.append("\"");
 		}
 
 		ViewableBy viewableBy = getViewableBy();
@@ -918,9 +1066,9 @@ public class ObjectEntryFolder implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
-		defaultValue = "com.liferay.headless.delivery.dto.v1_0.ObjectEntryFolder",
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
+		defaultValue = "com.liferay.headless.object.dto.v1_0.ObjectEntryFolder",
 		name = "x-class-name"
 	)
 	public String xClassName;

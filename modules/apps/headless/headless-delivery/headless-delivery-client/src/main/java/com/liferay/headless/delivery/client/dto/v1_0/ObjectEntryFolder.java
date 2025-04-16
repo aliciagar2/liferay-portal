@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-package com.liferay.headless.delivery.client.dto.v1_0;
+package com.liferay.headless.object.client.dto.v1_0;
 
-import com.liferay.headless.delivery.client.function.UnsafeSupplier;
-import com.liferay.headless.delivery.client.serdes.v1_0.ObjectEntryFolderSerDes;
+import com.liferay.headless.object.client.function.UnsafeSupplier;
+import com.liferay.headless.object.client.serdes.v1_0.ObjectEntryFolderSerDes;
 
 import java.io.Serializable;
 
@@ -17,7 +17,7 @@ import java.util.Objects;
 import javax.annotation.Generated;
 
 /**
- * @author Javier Gamarra
+ * @author Alicia García
  * @generated
  */
 @Generated("")
@@ -48,27 +48,6 @@ public class ObjectEntryFolder implements Cloneable, Serializable {
 	}
 
 	protected Map<String, Map<String, String>> actions;
-
-	public String getAssetLibraryKey() {
-		return assetLibraryKey;
-	}
-
-	public void setAssetLibraryKey(String assetLibraryKey) {
-		this.assetLibraryKey = assetLibraryKey;
-	}
-
-	public void setAssetLibraryKey(
-		UnsafeSupplier<String, Exception> assetLibraryKeyUnsafeSupplier) {
-
-		try {
-			assetLibraryKey = assetLibraryKeyUnsafeSupplier.get();
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	protected String assetLibraryKey;
 
 	public Creator getCreator() {
 		return creator;
@@ -216,25 +195,6 @@ public class ObjectEntryFolder implements Cloneable, Serializable {
 
 	protected Map<String, String> label_i18n;
 
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public void setName(UnsafeSupplier<String, Exception> nameUnsafeSupplier) {
-		try {
-			name = nameUnsafeSupplier.get();
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	protected String name;
-
 	public Integer getNumberOfObjectEntries() {
 		return numberOfObjectEntries;
 	}
@@ -282,6 +242,58 @@ public class ObjectEntryFolder implements Cloneable, Serializable {
 
 	protected Integer numberOfObjectEntryFolders;
 
+	public ParentObjectEntryFolderBrief getParentObjectEntryFolderBrief() {
+		return parentObjectEntryFolderBrief;
+	}
+
+	public void setParentObjectEntryFolderBrief(
+		ParentObjectEntryFolderBrief parentObjectEntryFolderBrief) {
+
+		this.parentObjectEntryFolderBrief = parentObjectEntryFolderBrief;
+	}
+
+	public void setParentObjectEntryFolderBrief(
+		UnsafeSupplier<ParentObjectEntryFolderBrief, Exception>
+			parentObjectEntryFolderBriefUnsafeSupplier) {
+
+		try {
+			parentObjectEntryFolderBrief =
+				parentObjectEntryFolderBriefUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected ParentObjectEntryFolderBrief parentObjectEntryFolderBrief;
+
+	public String getParentObjectEntryFolderExternalReferenceCode() {
+		return parentObjectEntryFolderExternalReferenceCode;
+	}
+
+	public void setParentObjectEntryFolderExternalReferenceCode(
+		String parentObjectEntryFolderExternalReferenceCode) {
+
+		this.parentObjectEntryFolderExternalReferenceCode =
+			parentObjectEntryFolderExternalReferenceCode;
+	}
+
+	public void setParentObjectEntryFolderExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			parentObjectEntryFolderExternalReferenceCodeUnsafeSupplier) {
+
+		try {
+			parentObjectEntryFolderExternalReferenceCode =
+				parentObjectEntryFolderExternalReferenceCodeUnsafeSupplier.
+					get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String parentObjectEntryFolderExternalReferenceCode;
+
 	public Long getParentObjectEntryFolderId() {
 		return parentObjectEntryFolderId;
 	}
@@ -304,6 +316,48 @@ public class ObjectEntryFolder implements Cloneable, Serializable {
 	}
 
 	protected Long parentObjectEntryFolderId;
+
+	public String getScopeKey() {
+		return scopeKey;
+	}
+
+	public void setScopeKey(String scopeKey) {
+		this.scopeKey = scopeKey;
+	}
+
+	public void setScopeKey(
+		UnsafeSupplier<String, Exception> scopeKeyUnsafeSupplier) {
+
+		try {
+			scopeKey = scopeKeyUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String scopeKey;
+
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
+	public void setTitle(
+		UnsafeSupplier<String, Exception> titleUnsafeSupplier) {
+
+		try {
+			title = titleUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String title;
 
 	public ViewableBy getViewableBy() {
 		return viewableBy;
