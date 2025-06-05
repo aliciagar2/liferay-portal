@@ -52,6 +52,7 @@ import org.junit.runner.RunWith;
 /**
  * @author Alicia García
  */
+@FeatureFlag("LPD-42553")
 @RunWith(Arquillian.class)
 public class ObjectEntryWorkflowHandlerTest {
 
