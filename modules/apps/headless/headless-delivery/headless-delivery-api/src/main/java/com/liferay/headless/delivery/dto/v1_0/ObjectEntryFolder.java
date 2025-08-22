@@ -3,22 +3,24 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-package com.liferay.headless.object.dto.v1_0;
+package com.liferay.headless.admin.user.dto.v1_0;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFilter;
-import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonValue;
 
-import com.liferay.headless.delivery.dto.v1_0.Creator;
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
+
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -32,37 +34,66 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-import javax.validation.constraints.NotEmpty;
-
-import javax.xml.bind.annotation.XmlRootElement;
-
 /**
- * @author Alicia García
+ * @author Javier Gamarra
  * @generated
  */
 @Generated("")
-@GraphQLName(
-	description = "Represents a object entry folder that contains objects entries and other object entry folders.",
-	value = "ObjectEntryFolder"
-)
-@io.swagger.v3.oas.annotations.media.Schema(
-	description = "Represents a object entry folder that contains objects entries and other object entry folders.",
-	requiredProperties = {"title"}
-)
+@GraphQLName(description = "Represents a shared asset.", value = "SharedAsset")
 @JsonFilter("Liferay.Vulcan")
-@XmlRootElement(name = "ObjectEntryFolder")
-public class ObjectEntryFolder implements Serializable {
+@XmlRootElement(name = "SharedAsset")
+public class SharedAsset implements Serializable {
 
-	public static ObjectEntryFolder toDTO(String json) {
-		return ObjectMapperUtil.readValue(ObjectEntryFolder.class, json);
+	public static SharedAsset toDTO(String json) {
+		return ObjectMapperUtil.readValue(SharedAsset.class, json);
 	}
 
-	public static ObjectEntryFolder unsafeToDTO(String json) {
-		return ObjectMapperUtil.unsafeReadValue(ObjectEntryFolder.class, json);
+	public static SharedAsset unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(SharedAsset.class, json);
 	}
+
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The shared asset actions."
+	)
+	public String[] getActionIds() {
+		if (_actionIdsSupplier != null) {
+			actionIds = _actionIdsSupplier.get();
+
+			_actionIdsSupplier = null;
+		}
+
+		return actionIds;
+	}
+
+	public void setActionIds(String[] actionIds) {
+		this.actionIds = actionIds;
+
+		_actionIdsSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setActionIds(
+		UnsafeSupplier<String[], Exception> actionIdsUnsafeSupplier) {
+
+		_actionIdsSupplier = () -> {
+			try {
+				return actionIdsUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(description = "The shared asset actions.")
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String[] actionIds;
+
+	@JsonIgnore
+	private Supplier<String[]> _actionIdsSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "Block of actions allowed by the user making the request."
@@ -112,7 +143,132 @@ public class ObjectEntryFolder implements Serializable {
 	private Supplier<Map<String, Map<String, String>>> _actionsSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "The object entry folder's creator."
+		description = "The shared asset type."
+	)
+	public String getAssetType() {
+		if (_assetTypeSupplier != null) {
+			assetType = _assetTypeSupplier.get();
+
+			_assetTypeSupplier = null;
+		}
+
+		return assetType;
+	}
+
+	public void setAssetType(String assetType) {
+		this.assetType = assetType;
+
+		_assetTypeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setAssetType(
+		UnsafeSupplier<String, Exception> assetTypeUnsafeSupplier) {
+
+		_assetTypeSupplier = () -> {
+			try {
+				return assetTypeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(description = "The shared asset type.")
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String assetType;
+
+	@JsonIgnore
+	private Supplier<String> _assetTypeSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
+	public String getClassName() {
+		if (_classNameSupplier != null) {
+			className = _classNameSupplier.get();
+
+			_classNameSupplier = null;
+		}
+
+		return className;
+	}
+
+	public void setClassName(String className) {
+		this.className = className;
+
+		_classNameSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setClassName(
+		UnsafeSupplier<String, Exception> classNameUnsafeSupplier) {
+
+		_classNameSupplier = () -> {
+			try {
+				return classNameUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String className;
+
+	@JsonIgnore
+	private Supplier<String> _classNameSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
+	public Long getClassPK() {
+		if (_classPKSupplier != null) {
+			classPK = _classPKSupplier.get();
+
+			_classPKSupplier = null;
+		}
+
+		return classPK;
+	}
+
+	public void setClassPK(Long classPK) {
+		this.classPK = classPK;
+
+		_classPKSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setClassPK(
+		UnsafeSupplier<Long, Exception> classPKUnsafeSupplier) {
+
+		_classPKSupplier = () -> {
+			try {
+				return classPKUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Long classPK;
+
+	@JsonIgnore
+	private Supplier<Long> _classPKSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The shared asset creator."
 	)
 	@Valid
 	public Creator getCreator() {
@@ -148,7 +304,7 @@ public class ObjectEntryFolder implements Serializable {
 		};
 	}
 
-	@GraphQLField(description = "The object entry folder's creator.")
+	@GraphQLField(description = "The shared asset creator.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Creator creator;
 
@@ -156,7 +312,7 @@ public class ObjectEntryFolder implements Serializable {
 	private Supplier<Creator> _creatorSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "The object entry folder's creation date."
+		description = "The shared asset creation date."
 	)
 	public Date getDateCreated() {
 		if (_dateCreatedSupplier != null) {
@@ -191,7 +347,7 @@ public class ObjectEntryFolder implements Serializable {
 		};
 	}
 
-	@GraphQLField(description = "The object entry folder's creation date.")
+	@GraphQLField(description = "The shared asset creation date.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date dateCreated;
 
@@ -199,7 +355,7 @@ public class ObjectEntryFolder implements Serializable {
 	private Supplier<Date> _dateCreatedSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "The last time a field of the folder changed."
+		description = "The shared asset modified date."
 	)
 	public Date getDateModified() {
 		if (_dateModifiedSupplier != null) {
@@ -234,7 +390,7 @@ public class ObjectEntryFolder implements Serializable {
 		};
 	}
 
-	@GraphQLField(description = "The last time a field of the folder changed.")
+	@GraphQLField(description = "The shared asset modified date.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date dateModified;
 
@@ -242,7 +398,7 @@ public class ObjectEntryFolder implements Serializable {
 	private Supplier<Date> _dateModifiedSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "The object entry folder's external reference code."
+		description = "The shared asset external reference code."
 	)
 	public String getExternalReferenceCode() {
 		if (_externalReferenceCodeSupplier != null) {
@@ -277,17 +433,147 @@ public class ObjectEntryFolder implements Serializable {
 		};
 	}
 
-	@GraphQLField(
-		description = "The object entry folder's external reference code."
-	)
-	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	@GraphQLField(description = "The shared asset external reference code.")
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String externalReferenceCode;
 
 	@JsonIgnore
 	private Supplier<String> _externalReferenceCodeSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "The object entry folder's ID."
+		description = "Optional field with the embedded file, can be embedded with nestedFields"
+	)
+	@Valid
+	public FileEntry getFile() {
+		if (_fileSupplier != null) {
+			file = _fileSupplier.get();
+
+			_fileSupplier = null;
+		}
+
+		return file;
+	}
+
+	public void setFile(FileEntry file) {
+		this.file = file;
+
+		_fileSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setFile(
+		UnsafeSupplier<FileEntry, Exception> fileUnsafeSupplier) {
+
+		_fileSupplier = () -> {
+			try {
+				return fileUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(
+		description = "Optional field with the embedded file, can be embedded with nestedFields"
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected FileEntry file;
+
+	@JsonIgnore
+	private Supplier<FileEntry> _fileSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The shared asset file type icon."
+	)
+	public String getFileTypeIcon() {
+		if (_fileTypeIconSupplier != null) {
+			fileTypeIcon = _fileTypeIconSupplier.get();
+
+			_fileTypeIconSupplier = null;
+		}
+
+		return fileTypeIcon;
+	}
+
+	public void setFileTypeIcon(String fileTypeIcon) {
+		this.fileTypeIcon = fileTypeIcon;
+
+		_fileTypeIconSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setFileTypeIcon(
+		UnsafeSupplier<String, Exception> fileTypeIconUnsafeSupplier) {
+
+		_fileTypeIconSupplier = () -> {
+			try {
+				return fileTypeIconUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(description = "The shared asset file type icon.")
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String fileTypeIcon;
+
+	@JsonIgnore
+	private Supplier<String> _fileTypeIconSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The shared asset file type icon color."
+	)
+	public String getFileTypeIconColor() {
+		if (_fileTypeIconColorSupplier != null) {
+			fileTypeIconColor = _fileTypeIconColorSupplier.get();
+
+			_fileTypeIconColorSupplier = null;
+		}
+
+		return fileTypeIconColor;
+	}
+
+	public void setFileTypeIconColor(String fileTypeIconColor) {
+		this.fileTypeIconColor = fileTypeIconColor;
+
+		_fileTypeIconColorSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setFileTypeIconColor(
+		UnsafeSupplier<String, Exception> fileTypeIconColorUnsafeSupplier) {
+
+		_fileTypeIconColorSupplier = () -> {
+			try {
+				return fileTypeIconColorUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(description = "The shared asset file type icon color.")
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String fileTypeIconColor;
+
+	@JsonIgnore
+	private Supplier<String> _fileTypeIconColorSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The shared asset ID."
 	)
 	public Long getId() {
 		if (_idSupplier != null) {
@@ -320,7 +606,7 @@ public class ObjectEntryFolder implements Serializable {
 		};
 	}
 
-	@GraphQLField(description = "The object entry folder's ID.")
+	@GraphQLField(description = "The shared asset ID.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Long id;
 
@@ -328,31 +614,31 @@ public class ObjectEntryFolder implements Serializable {
 	private Supplier<Long> _idSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "The object entry folder's label."
+		description = "Whether the shared asset is shareable or not"
 	)
-	public String getLabel() {
-		if (_labelSupplier != null) {
-			label = _labelSupplier.get();
+	public Boolean getShareable() {
+		if (_shareableSupplier != null) {
+			shareable = _shareableSupplier.get();
 
-			_labelSupplier = null;
+			_shareableSupplier = null;
 		}
 
-		return label;
+		return shareable;
 	}
 
-	public void setLabel(String label) {
-		this.label = label;
+	public void setShareable(Boolean shareable) {
+		this.shareable = shareable;
 
-		_labelSupplier = null;
+		_shareableSupplier = null;
 	}
 
 	@JsonIgnore
-	public void setLabel(
-		UnsafeSupplier<String, Exception> labelUnsafeSupplier) {
+	public void setShareable(
+		UnsafeSupplier<Boolean, Exception> shareableUnsafeSupplier) {
 
-		_labelSupplier = () -> {
+		_shareableSupplier = () -> {
 			try {
-				return labelUnsafeSupplier.get();
+				return shareableUnsafeSupplier.get();
 			}
 			catch (RuntimeException runtimeException) {
 				throw runtimeException;
@@ -363,85 +649,39 @@ public class ObjectEntryFolder implements Serializable {
 		};
 	}
 
-	@GraphQLField(description = "The object entry folder's label.")
-	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected String label;
+	@GraphQLField(description = "Whether the shared asset is shareable or not")
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Boolean shareable;
 
 	@JsonIgnore
-	private Supplier<String> _labelSupplier;
+	private Supplier<Boolean> _shareableSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "The localized object entry folder's label."
+		description = "The name of the site to which this shared asset is scoped."
 	)
-	@Valid
-	public Map<String, String> getLabel_i18n() {
-		if (_label_i18nSupplier != null) {
-			label_i18n = _label_i18nSupplier.get();
+	public String getSiteName() {
+		if (_siteNameSupplier != null) {
+			siteName = _siteNameSupplier.get();
 
-			_label_i18nSupplier = null;
+			_siteNameSupplier = null;
 		}
 
-		return label_i18n;
+		return siteName;
 	}
 
-	public void setLabel_i18n(Map<String, String> label_i18n) {
-		this.label_i18n = label_i18n;
+	public void setSiteName(String siteName) {
+		this.siteName = siteName;
 
-		_label_i18nSupplier = null;
+		_siteNameSupplier = null;
 	}
 
 	@JsonIgnore
-	public void setLabel_i18n(
-		UnsafeSupplier<Map<String, String>, Exception>
-			label_i18nUnsafeSupplier) {
+	public void setSiteName(
+		UnsafeSupplier<String, Exception> siteNameUnsafeSupplier) {
 
-		_label_i18nSupplier = () -> {
+		_siteNameSupplier = () -> {
 			try {
-				return label_i18nUnsafeSupplier.get();
-			}
-			catch (RuntimeException runtimeException) {
-				throw runtimeException;
-			}
-			catch (Exception exception) {
-				throw new RuntimeException(exception);
-			}
-		};
-	}
-
-	@GraphQLField(description = "The localized object entry folder's label.")
-	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected Map<String, String> label_i18n;
-
-	@JsonIgnore
-	private Supplier<Map<String, String>> _label_i18nSupplier;
-
-	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "The number of object entries in this object entry folder."
-	)
-	public Integer getNumberOfObjectEntries() {
-		if (_numberOfObjectEntriesSupplier != null) {
-			numberOfObjectEntries = _numberOfObjectEntriesSupplier.get();
-
-			_numberOfObjectEntriesSupplier = null;
-		}
-
-		return numberOfObjectEntries;
-	}
-
-	public void setNumberOfObjectEntries(Integer numberOfObjectEntries) {
-		this.numberOfObjectEntries = numberOfObjectEntries;
-
-		_numberOfObjectEntriesSupplier = null;
-	}
-
-	@JsonIgnore
-	public void setNumberOfObjectEntries(
-		UnsafeSupplier<Integer, Exception>
-			numberOfObjectEntriesUnsafeSupplier) {
-
-		_numberOfObjectEntriesSupplier = () -> {
-			try {
-				return numberOfObjectEntriesUnsafeSupplier.get();
+				return siteNameUnsafeSupplier.get();
 			}
 			catch (RuntimeException runtimeException) {
 				throw runtimeException;
@@ -453,258 +693,16 @@ public class ObjectEntryFolder implements Serializable {
 	}
 
 	@GraphQLField(
-		description = "The number of object entries in this object entry folder."
+		description = "The name of the site to which this shared asset is scoped."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
-	protected Integer numberOfObjectEntries;
+	protected String siteName;
 
 	@JsonIgnore
-	private Supplier<Integer> _numberOfObjectEntriesSupplier;
+	private Supplier<String> _siteNameSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "The number of this object entry folder's child object entry folders."
-	)
-	public Integer getNumberOfObjectEntryFolders() {
-		if (_numberOfObjectEntryFoldersSupplier != null) {
-			numberOfObjectEntryFolders =
-				_numberOfObjectEntryFoldersSupplier.get();
-
-			_numberOfObjectEntryFoldersSupplier = null;
-		}
-
-		return numberOfObjectEntryFolders;
-	}
-
-	public void setNumberOfObjectEntryFolders(
-		Integer numberOfObjectEntryFolders) {
-
-		this.numberOfObjectEntryFolders = numberOfObjectEntryFolders;
-
-		_numberOfObjectEntryFoldersSupplier = null;
-	}
-
-	@JsonIgnore
-	public void setNumberOfObjectEntryFolders(
-		UnsafeSupplier<Integer, Exception>
-			numberOfObjectEntryFoldersUnsafeSupplier) {
-
-		_numberOfObjectEntryFoldersSupplier = () -> {
-			try {
-				return numberOfObjectEntryFoldersUnsafeSupplier.get();
-			}
-			catch (RuntimeException runtimeException) {
-				throw runtimeException;
-			}
-			catch (Exception exception) {
-				throw new RuntimeException(exception);
-			}
-		};
-	}
-
-	@GraphQLField(
-		description = "The number of this object entry folder's child object entry folders."
-	)
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
-	protected Integer numberOfObjectEntryFolders;
-
-	@JsonIgnore
-	private Supplier<Integer> _numberOfObjectEntryFoldersSupplier;
-
-	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "The object entry folder's parent, if it exists."
-	)
-	@Valid
-	public ParentObjectEntryFolderBrief getParentObjectEntryFolderBrief() {
-		if (_parentObjectEntryFolderBriefSupplier != null) {
-			parentObjectEntryFolderBrief =
-				_parentObjectEntryFolderBriefSupplier.get();
-
-			_parentObjectEntryFolderBriefSupplier = null;
-		}
-
-		return parentObjectEntryFolderBrief;
-	}
-
-	public void setParentObjectEntryFolderBrief(
-		ParentObjectEntryFolderBrief parentObjectEntryFolderBrief) {
-
-		this.parentObjectEntryFolderBrief = parentObjectEntryFolderBrief;
-
-		_parentObjectEntryFolderBriefSupplier = null;
-	}
-
-	@JsonIgnore
-	public void setParentObjectEntryFolderBrief(
-		UnsafeSupplier<ParentObjectEntryFolderBrief, Exception>
-			parentObjectEntryFolderBriefUnsafeSupplier) {
-
-		_parentObjectEntryFolderBriefSupplier = () -> {
-			try {
-				return parentObjectEntryFolderBriefUnsafeSupplier.get();
-			}
-			catch (RuntimeException runtimeException) {
-				throw runtimeException;
-			}
-			catch (Exception exception) {
-				throw new RuntimeException(exception);
-			}
-		};
-	}
-
-	@GraphQLField(
-		description = "The object entry folder's parent, if it exists."
-	)
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
-	protected ParentObjectEntryFolderBrief parentObjectEntryFolderBrief;
-
-	@JsonIgnore
-	private Supplier<ParentObjectEntryFolderBrief>
-		_parentObjectEntryFolderBriefSupplier;
-
-	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "The parent entry folder's external reference code, if it exists."
-	)
-	public String getParentObjectEntryFolderExternalReferenceCode() {
-		if (_parentObjectEntryFolderExternalReferenceCodeSupplier != null) {
-			parentObjectEntryFolderExternalReferenceCode =
-				_parentObjectEntryFolderExternalReferenceCodeSupplier.get();
-
-			_parentObjectEntryFolderExternalReferenceCodeSupplier = null;
-		}
-
-		return parentObjectEntryFolderExternalReferenceCode;
-	}
-
-	public void setParentObjectEntryFolderExternalReferenceCode(
-		String parentObjectEntryFolderExternalReferenceCode) {
-
-		this.parentObjectEntryFolderExternalReferenceCode =
-			parentObjectEntryFolderExternalReferenceCode;
-
-		_parentObjectEntryFolderExternalReferenceCodeSupplier = null;
-	}
-
-	@JsonIgnore
-	public void setParentObjectEntryFolderExternalReferenceCode(
-		UnsafeSupplier<String, Exception>
-			parentObjectEntryFolderExternalReferenceCodeUnsafeSupplier) {
-
-		_parentObjectEntryFolderExternalReferenceCodeSupplier = () -> {
-			try {
-				return parentObjectEntryFolderExternalReferenceCodeUnsafeSupplier.
-					get();
-			}
-			catch (RuntimeException runtimeException) {
-				throw runtimeException;
-			}
-			catch (Exception exception) {
-				throw new RuntimeException(exception);
-			}
-		};
-	}
-
-	@GraphQLField(
-		description = "The parent entry folder's external reference code, if it exists."
-	)
-	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected String parentObjectEntryFolderExternalReferenceCode;
-
-	@JsonIgnore
-	private Supplier<String>
-		_parentObjectEntryFolderExternalReferenceCodeSupplier;
-
-	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "The ID of the object entry folder's parent, if it exists."
-	)
-	public Long getParentObjectEntryFolderId() {
-		if (_parentObjectEntryFolderIdSupplier != null) {
-			parentObjectEntryFolderId =
-				_parentObjectEntryFolderIdSupplier.get();
-
-			_parentObjectEntryFolderIdSupplier = null;
-		}
-
-		return parentObjectEntryFolderId;
-	}
-
-	public void setParentObjectEntryFolderId(Long parentObjectEntryFolderId) {
-		this.parentObjectEntryFolderId = parentObjectEntryFolderId;
-
-		_parentObjectEntryFolderIdSupplier = null;
-	}
-
-	@JsonIgnore
-	public void setParentObjectEntryFolderId(
-		UnsafeSupplier<Long, Exception>
-			parentObjectEntryFolderIdUnsafeSupplier) {
-
-		_parentObjectEntryFolderIdSupplier = () -> {
-			try {
-				return parentObjectEntryFolderIdUnsafeSupplier.get();
-			}
-			catch (RuntimeException runtimeException) {
-				throw runtimeException;
-			}
-			catch (Exception exception) {
-				throw new RuntimeException(exception);
-			}
-		};
-	}
-
-	@GraphQLField(
-		description = "The ID of the object entry folder's parent, if it exists."
-	)
-	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected Long parentObjectEntryFolderId;
-
-	@JsonIgnore
-	private Supplier<Long> _parentObjectEntryFolderIdSupplier;
-
-	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "The scope key of the object entry folder."
-	)
-	public String getScopeKey() {
-		if (_scopeKeySupplier != null) {
-			scopeKey = _scopeKeySupplier.get();
-
-			_scopeKeySupplier = null;
-		}
-
-		return scopeKey;
-	}
-
-	public void setScopeKey(String scopeKey) {
-		this.scopeKey = scopeKey;
-
-		_scopeKeySupplier = null;
-	}
-
-	@JsonIgnore
-	public void setScopeKey(
-		UnsafeSupplier<String, Exception> scopeKeyUnsafeSupplier) {
-
-		_scopeKeySupplier = () -> {
-			try {
-				return scopeKeyUnsafeSupplier.get();
-			}
-			catch (RuntimeException runtimeException) {
-				throw runtimeException;
-			}
-			catch (Exception exception) {
-				throw new RuntimeException(exception);
-			}
-		};
-	}
-
-	@GraphQLField(description = "The scope key of the object entry folder.")
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
-	protected String scopeKey;
-
-	@JsonIgnore
-	private Supplier<String> _scopeKeySupplier;
-
-	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "The object entry folder's main title/name."
+		description = "The shared asset title."
 	)
 	public String getTitle() {
 		if (_titleSupplier != null) {
@@ -739,71 +737,12 @@ public class ObjectEntryFolder implements Serializable {
 		};
 	}
 
-	@GraphQLField(description = "The object entry folder's main title/name.")
-	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	@NotEmpty
+	@GraphQLField(description = "The shared asset title.")
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String title;
 
 	@JsonIgnore
 	private Supplier<String> _titleSupplier;
-
-	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "A write-only property that specifies the object entry folder's default permissions."
-	)
-	@JsonGetter("viewableBy")
-	@Valid
-	public ViewableBy getViewableBy() {
-		if (_viewableBySupplier != null) {
-			viewableBy = _viewableBySupplier.get();
-
-			_viewableBySupplier = null;
-		}
-
-		return viewableBy;
-	}
-
-	@JsonIgnore
-	public String getViewableByAsString() {
-		ViewableBy viewableBy = getViewableBy();
-
-		if (viewableBy == null) {
-			return null;
-		}
-
-		return viewableBy.toString();
-	}
-
-	public void setViewableBy(ViewableBy viewableBy) {
-		this.viewableBy = viewableBy;
-
-		_viewableBySupplier = null;
-	}
-
-	@JsonIgnore
-	public void setViewableBy(
-		UnsafeSupplier<ViewableBy, Exception> viewableByUnsafeSupplier) {
-
-		_viewableBySupplier = () -> {
-			try {
-				return viewableByUnsafeSupplier.get();
-			}
-			catch (RuntimeException runtimeException) {
-				throw runtimeException;
-			}
-			catch (Exception exception) {
-				throw new RuntimeException(exception);
-			}
-		};
-	}
-
-	@GraphQLField(
-		description = "A write-only property that specifies the object entry folder's default permissions."
-	)
-	@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-	protected ViewableBy viewableBy;
-
-	@JsonIgnore
-	private Supplier<ViewableBy> _viewableBySupplier;
 
 	@Override
 	public boolean equals(Object object) {
@@ -811,13 +750,13 @@ public class ObjectEntryFolder implements Serializable {
 			return true;
 		}
 
-		if (!(object instanceof ObjectEntryFolder)) {
+		if (!(object instanceof SharedAsset)) {
 			return false;
 		}
 
-		ObjectEntryFolder objectEntryFolder = (ObjectEntryFolder)object;
+		SharedAsset sharedAsset = (SharedAsset)object;
 
-		return Objects.equals(toString(), objectEntryFolder.toString());
+		return Objects.equals(toString(), sharedAsset.toString());
 	}
 
 	@Override
@@ -835,6 +774,32 @@ public class ObjectEntryFolder implements Serializable {
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 
+		String[] actionIds = getActionIds();
+
+		if (actionIds != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"actionIds\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < actionIds.length; i++) {
+				sb.append("\"");
+
+				sb.append(_escape(actionIds[i]));
+
+				sb.append("\"");
+
+				if ((i + 1) < actionIds.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
 		Map<String, Map<String, String>> actions = getActions();
 
 		if (actions != null) {
@@ -847,6 +812,50 @@ public class ObjectEntryFolder implements Serializable {
 			sb.append(_toJSON(actions));
 		}
 
+		String assetType = getAssetType();
+
+		if (assetType != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"assetType\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(assetType));
+
+			sb.append("\"");
+		}
+
+		String className = getClassName();
+
+		if (className != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"className\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(className));
+
+			sb.append("\"");
+		}
+
+		Long classPK = getClassPK();
+
+		if (classPK != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"classPK\": ");
+
+			sb.append(classPK);
+		}
+
 		Creator creator = getCreator();
 
 		if (creator != null) {
@@ -856,7 +865,7 @@ public class ObjectEntryFolder implements Serializable {
 
 			sb.append("\"creator\": ");
 
-			sb.append(creator);
+			sb.append(String.valueOf(creator));
 		}
 
 		Date dateCreated = getDateCreated();
@@ -907,6 +916,50 @@ public class ObjectEntryFolder implements Serializable {
 			sb.append("\"");
 		}
 
+		FileEntry file = getFile();
+
+		if (file != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"file\": ");
+
+			sb.append(String.valueOf(file));
+		}
+
+		String fileTypeIcon = getFileTypeIcon();
+
+		if (fileTypeIcon != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"fileTypeIcon\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(fileTypeIcon));
+
+			sb.append("\"");
+		}
+
+		String fileTypeIconColor = getFileTypeIconColor();
+
+		if (fileTypeIconColor != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"fileTypeIconColor\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(fileTypeIconColor));
+
+			sb.append("\"");
+		}
+
 		Long id = getId();
 
 		if (id != null) {
@@ -919,112 +972,30 @@ public class ObjectEntryFolder implements Serializable {
 			sb.append(id);
 		}
 
-		String label = getLabel();
+		Boolean shareable = getShareable();
 
-		if (label != null) {
+		if (shareable != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"label\": ");
+			sb.append("\"shareable\": ");
+
+			sb.append(shareable);
+		}
+
+		String siteName = getSiteName();
+
+		if (siteName != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"siteName\": ");
 
 			sb.append("\"");
 
-			sb.append(_escape(label));
-
-			sb.append("\"");
-		}
-
-		Map<String, String> label_i18n = getLabel_i18n();
-
-		if (label_i18n != null) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append("\"label_i18n\": ");
-
-			sb.append(_toJSON(label_i18n));
-		}
-
-		Integer numberOfObjectEntries = getNumberOfObjectEntries();
-
-		if (numberOfObjectEntries != null) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append("\"numberOfObjectEntries\": ");
-
-			sb.append(numberOfObjectEntries);
-		}
-
-		Integer numberOfObjectEntryFolders = getNumberOfObjectEntryFolders();
-
-		if (numberOfObjectEntryFolders != null) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append("\"numberOfObjectEntryFolders\": ");
-
-			sb.append(numberOfObjectEntryFolders);
-		}
-
-		ParentObjectEntryFolderBrief parentObjectEntryFolderBrief =
-			getParentObjectEntryFolderBrief();
-
-		if (parentObjectEntryFolderBrief != null) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append("\"parentObjectEntryFolderBrief\": ");
-
-			sb.append(String.valueOf(parentObjectEntryFolderBrief));
-		}
-
-		String parentObjectEntryFolderExternalReferenceCode =
-			getParentObjectEntryFolderExternalReferenceCode();
-
-		if (parentObjectEntryFolderExternalReferenceCode != null) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append("\"parentObjectEntryFolderExternalReferenceCode\": ");
-
-			sb.append("\"");
-
-			sb.append(_escape(parentObjectEntryFolderExternalReferenceCode));
-
-			sb.append("\"");
-		}
-
-		Long parentObjectEntryFolderId = getParentObjectEntryFolderId();
-
-		if (parentObjectEntryFolderId != null) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append("\"parentObjectEntryFolderId\": ");
-
-			sb.append(parentObjectEntryFolderId);
-		}
-
-		String scopeKey = getScopeKey();
-
-		if (scopeKey != null) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append("\"scopeKey\": ");
-
-			sb.append("\"");
-
-			sb.append(_escape(scopeKey));
+			sb.append(_escape(siteName));
 
 			sb.append("\"");
 		}
@@ -1045,22 +1016,6 @@ public class ObjectEntryFolder implements Serializable {
 			sb.append("\"");
 		}
 
-		ViewableBy viewableBy = getViewableBy();
-
-		if (viewableBy != null) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append("\"viewableBy\": ");
-
-			sb.append("\"");
-
-			sb.append(viewableBy);
-
-			sb.append("\"");
-		}
-
 		sb.append("}");
 
 		return sb.toString();
@@ -1068,48 +1023,10 @@ public class ObjectEntryFolder implements Serializable {
 
 	@io.swagger.v3.oas.annotations.media.Schema(
 		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
-		defaultValue = "com.liferay.headless.object.dto.v1_0.ObjectEntryFolder",
+		defaultValue = "com.liferay.headless.admin.user.dto.v1_0.SharedAsset",
 		name = "x-class-name"
 	)
 	public String xClassName;
-
-	@GraphQLName("ViewableBy")
-	public static enum ViewableBy {
-
-		ANYONE("Anyone"), MEMBERS("Members"), OWNER("Owner");
-
-		@JsonCreator
-		public static ViewableBy create(String value) {
-			if ((value == null) || value.equals("")) {
-				return null;
-			}
-
-			for (ViewableBy viewableBy : values()) {
-				if (Objects.equals(viewableBy.getValue(), value)) {
-					return viewableBy;
-				}
-			}
-
-			throw new IllegalArgumentException("Invalid enum value: " + value);
-		}
-
-		@JsonValue
-		public String getValue() {
-			return _value;
-		}
-
-		@Override
-		public String toString() {
-			return _value;
-		}
-
-		private ViewableBy(String value) {
-			_value = value;
-		}
-
-		private final String _value;
-
-	}
 
 	private static String _escape(Object object) {
 		return StringUtil.replace(
