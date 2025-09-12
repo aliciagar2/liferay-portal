@@ -8,13 +8,13 @@ package com.liferay.headless.asset.library.client.dto.v1_0;
 import com.liferay.headless.asset.library.client.function.UnsafeSupplier;
 import com.liferay.headless.asset.library.client.serdes.v1_0.AssetLibrarySerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Roberto Díaz
@@ -26,6 +26,28 @@ public class AssetLibrary implements Cloneable, Serializable {
 	public static AssetLibrary toDTO(String json) {
 		return AssetLibrarySerDes.toDTO(json);
 	}
+
+	public Map<String, Map<String, String>> getActions() {
+		return actions;
+	}
+
+	public void setActions(Map<String, Map<String, String>> actions) {
+		this.actions = actions;
+	}
+
+	public void setActions(
+		UnsafeSupplier<Map<String, Map<String, String>>, Exception>
+			actionsUnsafeSupplier) {
+
+		try {
+			actions = actionsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Map<String, Map<String, String>> actions;
 
 	public String getAssetLibraryKey() {
 		return assetLibraryKey;
@@ -47,6 +69,70 @@ public class AssetLibrary implements Cloneable, Serializable {
 	}
 
 	protected String assetLibraryKey;
+
+	public Long getConnectedSiteId() {
+		return connectedSiteId;
+	}
+
+	public void setConnectedSiteId(Long connectedSiteId) {
+		this.connectedSiteId = connectedSiteId;
+	}
+
+	public void setConnectedSiteId(
+		UnsafeSupplier<Long, Exception> connectedSiteIdUnsafeSupplier) {
+
+		try {
+			connectedSiteId = connectedSiteIdUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Long connectedSiteId;
+
+	public ConnectedSite[] getConnectedSites() {
+		return connectedSites;
+	}
+
+	public void setConnectedSites(ConnectedSite[] connectedSites) {
+		this.connectedSites = connectedSites;
+	}
+
+	public void setConnectedSites(
+		UnsafeSupplier<ConnectedSite[], Exception>
+			connectedSitesUnsafeSupplier) {
+
+		try {
+			connectedSites = connectedSitesUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected ConnectedSite[] connectedSites;
+
+	public Long getCreatorUserId() {
+		return creatorUserId;
+	}
+
+	public void setCreatorUserId(Long creatorUserId) {
+		this.creatorUserId = creatorUserId;
+	}
+
+	public void setCreatorUserId(
+		UnsafeSupplier<Long, Exception> creatorUserIdUnsafeSupplier) {
+
+		try {
+			creatorUserId = creatorUserIdUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Long creatorUserId;
 
 	public Date getDateCreated() {
 		return dateCreated;
@@ -173,53 +259,6 @@ public class AssetLibrary implements Cloneable, Serializable {
 
 	protected Long id;
 
-	public Long[] getLinkedSiteIds() {
-		return linkedSiteIds;
-	}
-
-	public void setLinkedSiteIds(Long[] linkedSiteIds) {
-		this.linkedSiteIds = linkedSiteIds;
-	}
-
-	public void setLinkedSiteIds(
-		UnsafeSupplier<Long[], Exception> linkedSiteIdsUnsafeSupplier) {
-
-		try {
-			linkedSiteIds = linkedSiteIdsUnsafeSupplier.get();
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	protected Long[] linkedSiteIds;
-
-	public String[] getLinkedSitesExternalReferenceCodes() {
-		return linkedSitesExternalReferenceCodes;
-	}
-
-	public void setLinkedSitesExternalReferenceCodes(
-		String[] linkedSitesExternalReferenceCodes) {
-
-		this.linkedSitesExternalReferenceCodes =
-			linkedSitesExternalReferenceCodes;
-	}
-
-	public void setLinkedSitesExternalReferenceCodes(
-		UnsafeSupplier<String[], Exception>
-			linkedSitesExternalReferenceCodesUnsafeSupplier) {
-
-		try {
-			linkedSitesExternalReferenceCodes =
-				linkedSitesExternalReferenceCodesUnsafeSupplier.get();
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	protected String[] linkedSitesExternalReferenceCodes;
-
 	public String getName() {
 		return name;
 	}
@@ -261,26 +300,159 @@ public class AssetLibrary implements Cloneable, Serializable {
 
 	protected Map<String, String> name_i18n;
 
-	public Long getSiteId() {
-		return siteId;
+	public Integer getNumberOfConnectedSites() {
+		return numberOfConnectedSites;
 	}
 
-	public void setSiteId(Long siteId) {
-		this.siteId = siteId;
+	public void setNumberOfConnectedSites(Integer numberOfConnectedSites) {
+		this.numberOfConnectedSites = numberOfConnectedSites;
 	}
 
-	public void setSiteId(
-		UnsafeSupplier<Long, Exception> siteIdUnsafeSupplier) {
+	public void setNumberOfConnectedSites(
+		UnsafeSupplier<Integer, Exception>
+			numberOfConnectedSitesUnsafeSupplier) {
 
 		try {
-			siteId = siteIdUnsafeSupplier.get();
+			numberOfConnectedSites = numberOfConnectedSitesUnsafeSupplier.get();
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	protected Long siteId;
+	protected Integer numberOfConnectedSites;
+
+	public Integer getNumberOfUserAccounts() {
+		return numberOfUserAccounts;
+	}
+
+	public void setNumberOfUserAccounts(Integer numberOfUserAccounts) {
+		this.numberOfUserAccounts = numberOfUserAccounts;
+	}
+
+	public void setNumberOfUserAccounts(
+		UnsafeSupplier<Integer, Exception> numberOfUserAccountsUnsafeSupplier) {
+
+		try {
+			numberOfUserAccounts = numberOfUserAccountsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Integer numberOfUserAccounts;
+
+	public Integer getNumberOfUserGroups() {
+		return numberOfUserGroups;
+	}
+
+	public void setNumberOfUserGroups(Integer numberOfUserGroups) {
+		this.numberOfUserGroups = numberOfUserGroups;
+	}
+
+	public void setNumberOfUserGroups(
+		UnsafeSupplier<Integer, Exception> numberOfUserGroupsUnsafeSupplier) {
+
+		try {
+			numberOfUserGroups = numberOfUserGroupsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Integer numberOfUserGroups;
+
+	public Settings getSettings() {
+		return settings;
+	}
+
+	public void setSettings(Settings settings) {
+		this.settings = settings;
+	}
+
+	public void setSettings(
+		UnsafeSupplier<Settings, Exception> settingsUnsafeSupplier) {
+
+		try {
+			settings = settingsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Settings settings;
+
+	public Type getType() {
+		return type;
+	}
+
+	public String getTypeAsString() {
+		if (type == null) {
+			return null;
+		}
+
+		return type.toString();
+	}
+
+	public void setType(Type type) {
+		this.type = type;
+	}
+
+	public void setType(UnsafeSupplier<Type, Exception> typeUnsafeSupplier) {
+		try {
+			type = typeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Type type;
+
+	public UserAccount[] getUserAccounts() {
+		return userAccounts;
+	}
+
+	public void setUserAccounts(UserAccount[] userAccounts) {
+		this.userAccounts = userAccounts;
+	}
+
+	public void setUserAccounts(
+		UnsafeSupplier<UserAccount[], Exception> userAccountsUnsafeSupplier) {
+
+		try {
+			userAccounts = userAccountsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected UserAccount[] userAccounts;
+
+	public UserGroup[] getUserGroups() {
+		return userGroups;
+	}
+
+	public void setUserGroups(UserGroup[] userGroups) {
+		this.userGroups = userGroups;
+	}
+
+	public void setUserGroups(
+		UnsafeSupplier<UserGroup[], Exception> userGroupsUnsafeSupplier) {
+
+		try {
+			userGroups = userGroupsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected UserGroup[] userGroups;
 
 	@Override
 	public AssetLibrary clone() throws CloneNotSupportedException {
@@ -311,6 +483,39 @@ public class AssetLibrary implements Cloneable, Serializable {
 
 	public String toString() {
 		return AssetLibrarySerDes.toJSON(this);
+	}
+
+	public static enum Type {
+
+		ASSET_LIBRARY("AssetLibrary"), SPACE("Space");
+
+		public static Type create(String value) {
+			for (Type type : values()) {
+				if (Objects.equals(type.getValue(), value) ||
+					Objects.equals(type.name(), value)) {
+
+					return type;
+				}
+			}
+
+			return null;
+		}
+
+		public String getValue() {
+			return _value;
+		}
+
+		@Override
+		public String toString() {
+			return _value;
+		}
+
+		private Type(String value) {
+			_value = value;
+		}
+
+		private final String _value;
+
 	}
 
 }

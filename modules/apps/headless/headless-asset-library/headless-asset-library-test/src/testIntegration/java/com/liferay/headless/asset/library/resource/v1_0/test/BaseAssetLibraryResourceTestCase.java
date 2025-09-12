@@ -13,13 +13,21 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.depot.constants.DepotConstants;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryLocalServiceUtil;
 import com.liferay.headless.asset.library.client.dto.v1_0.AssetLibrary;
 import com.liferay.headless.asset.library.client.http.HttpInvoker;
 import com.liferay.headless.asset.library.client.pagination.Page;
+import com.liferay.headless.asset.library.client.pagination.Pagination;
 import com.liferay.headless.asset.library.client.resource.v1_0.AssetLibraryResource;
 import com.liferay.headless.asset.library.client.serdes.v1_0.AssetLibrarySerDes;
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
+import com.liferay.oauth2.provider.scope.ScopeChecker;
+import com.liferay.petra.function.UnsafeTriConsumer;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -27,27 +35,50 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
+import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.ResourceActionLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.util.PropsValues;
+import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
-import com.liferay.portal.vulcan.util.TransformUtil;
+
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
 
 import java.lang.reflect.Method;
 
-import java.text.DateFormat;
+import java.net.URI;
+
+import java.text.Format;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -56,13 +87,10 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -71,6 +99,9 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 
 /**
  * @author Roberto Díaz
@@ -81,12 +112,14 @@ public abstract class BaseAssetLibraryResourceTestCase {
 
 	@ClassRule
 	@Rule
-	public static final LiferayIntegrationTestRule liferayIntegrationTestRule =
-		new LiferayIntegrationTestRule();
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(),
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		_dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
+		_format = FastDateFormatFactoryUtil.getSimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 	}
 
@@ -98,25 +131,47 @@ public abstract class BaseAssetLibraryResourceTestCase {
 		testCompany = CompanyLocalServiceUtil.getCompany(
 			testGroup.getCompanyId());
 
-		testDepotEntry = DepotEntryLocalServiceUtil.addDepotEntry(
+		irrelevantDepotEntry = DepotEntryLocalServiceUtil.addDepotEntry(
 			Collections.singletonMap(
 				LocaleUtil.getDefault(), RandomTestUtil.randomString()),
-			null,
+			null, DepotConstants.TYPE_ASSET_LIBRARY,
 			new ServiceContext() {
 				{
-					setCompanyId(testGroup.getCompanyId());
+					setCompanyId(testCompany.getCompanyId());
 					setUserId(TestPropsValues.getUserId());
 				}
 			});
+		irrelevantDepotEntryGroup = irrelevantDepotEntry.getGroup();
+		testDepotEntry = DepotEntryLocalServiceUtil.addDepotEntry(
+			Collections.singletonMap(
+				LocaleUtil.getDefault(), RandomTestUtil.randomString()),
+			null, DepotConstants.TYPE_ASSET_LIBRARY,
+			new ServiceContext() {
+				{
+					setCompanyId(testCompany.getCompanyId());
+					setUserId(TestPropsValues.getUserId());
+				}
+			});
+		testDepotEntryGroup = testDepotEntry.getGroup();
 
 		_assetLibraryResource.setContextCompany(testCompany);
 
-		com.liferay.portal.kernel.model.User testCompanyAdminUser =
-			UserTestUtil.getAdminUser(testCompany.getCompanyId());
+		_testCompanyAdminUser = UserTestUtil.getAdminUser(
+			testCompany.getCompanyId());
 
 		assetLibraryResource = AssetLibraryResource.builder(
 		).authentication(
-			testCompanyAdminUser.getEmailAddress(),
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
 		).endpoint(
 			testCompany.getVirtualHostname(), 8080, "http"
@@ -199,105 +254,6 @@ public abstract class BaseAssetLibraryResourceTestCase {
 	}
 
 	@Test
-	public void testPostAssetLibrary() throws Exception {
-		AssetLibrary randomAssetLibrary = randomAssetLibrary();
-
-		AssetLibrary postAssetLibrary = testPostAssetLibrary_addAssetLibrary(
-			randomAssetLibrary);
-
-		assertEquals(randomAssetLibrary, postAssetLibrary);
-		assertValid(postAssetLibrary);
-	}
-
-	protected AssetLibrary testPostAssetLibrary_addAssetLibrary(
-			AssetLibrary assetLibrary)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testDeleteAssetLibraryBySite() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		AssetLibrary assetLibrary =
-			testDeleteAssetLibraryBySite_addAssetLibrary();
-
-		assertHttpResponseStatusCode(
-			204,
-			assetLibraryResource.deleteAssetLibraryBySiteHttpResponse(
-				assetLibrary.getSiteId()));
-
-		assertHttpResponseStatusCode(
-			404,
-			assetLibraryResource.getAssetLibraryBySiteHttpResponse(
-				assetLibrary.getSiteId()));
-
-		assertHttpResponseStatusCode(
-			404,
-			assetLibraryResource.getAssetLibraryBySiteHttpResponse(
-				assetLibrary.getSiteId()));
-	}
-
-	protected AssetLibrary testDeleteAssetLibraryBySite_addAssetLibrary()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetAssetLibraryBySite() throws Exception {
-		AssetLibrary postAssetLibrary =
-			testGetAssetLibraryBySite_addAssetLibrary();
-
-		AssetLibrary getAssetLibrary =
-			assetLibraryResource.getAssetLibraryBySite(
-				postAssetLibrary.getSiteId());
-
-		assertEquals(postAssetLibrary, getAssetLibrary);
-		assertValid(getAssetLibrary);
-	}
-
-	protected AssetLibrary testGetAssetLibraryBySite_addAssetLibrary()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testPatchAssetLibraryBySite() throws Exception {
-		AssetLibrary postAssetLibrary =
-			testPatchAssetLibraryBySite_addAssetLibrary();
-
-		AssetLibrary randomPatchAssetLibrary = randomPatchAssetLibrary();
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		AssetLibrary patchAssetLibrary =
-			assetLibraryResource.patchAssetLibraryBySite(
-				postAssetLibrary.getSiteId(), randomPatchAssetLibrary);
-
-		AssetLibrary expectedPatchAssetLibrary = postAssetLibrary.clone();
-
-		BeanTestUtil.copyProperties(
-			randomPatchAssetLibrary, expectedPatchAssetLibrary);
-
-		AssetLibrary getAssetLibrary =
-			assetLibraryResource.getAssetLibraryBySite(null);
-
-		assertEquals(expectedPatchAssetLibrary, getAssetLibrary);
-		assertValid(getAssetLibrary);
-	}
-
-	protected AssetLibrary testPatchAssetLibraryBySite_addAssetLibrary()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testDeleteAssetLibrary() throws Exception {
 		@SuppressWarnings("PMD.UnusedLocalVariable")
 		AssetLibrary assetLibrary = testDeleteAssetLibrary_addAssetLibrary();
@@ -311,12 +267,660 @@ public abstract class BaseAssetLibraryResourceTestCase {
 			404,
 			assetLibraryResource.getAssetLibraryHttpResponse(
 				assetLibrary.getId()));
-
 		assertHttpResponseStatusCode(
 			404, assetLibraryResource.getAssetLibraryHttpResponse(0L));
 	}
 
 	protected AssetLibrary testDeleteAssetLibrary_addAssetLibrary()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testDeleteAssetLibraryBatch() throws Exception {
+		AssetLibrary assetLibrary1 =
+			testDeleteAssetLibraryBatch_addAssetLibrary();
+
+		testDeleteAssetLibraryBatch_deleteAssetLibrary(
+			202, assetLibrary1.getExternalReferenceCode(), null);
+
+		assertHttpResponseStatusCode(
+			404,
+			assetLibraryResource.getAssetLibraryHttpResponse(
+				assetLibrary1.getId()));
+
+		assetLibrary1 = testDeleteAssetLibraryBatch_addAssetLibrary();
+
+		testDeleteAssetLibraryBatch_deleteAssetLibrary(
+			202, null, assetLibrary1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			assetLibraryResource.getAssetLibraryHttpResponse(
+				assetLibrary1.getId()));
+
+		assetLibrary1 = testDeleteAssetLibraryBatch_addAssetLibrary();
+		AssetLibrary assetLibrary2 =
+			testDeleteAssetLibraryBatch_addAssetLibrary();
+
+		testDeleteAssetLibraryBatch_deleteAssetLibrary(
+			202, assetLibrary2.getExternalReferenceCode(),
+			assetLibrary1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			assetLibraryResource.getAssetLibraryHttpResponse(
+				assetLibrary1.getId()));
+		assertHttpResponseStatusCode(
+			200,
+			assetLibraryResource.getAssetLibraryHttpResponse(
+				assetLibrary2.getId()));
+
+		testDeleteAssetLibraryBatch_deleteAssetLibrary(
+			202, assetLibrary2.getExternalReferenceCode(),
+			assetLibrary1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			assetLibraryResource.getAssetLibraryHttpResponse(
+				assetLibrary2.getId()));
+	}
+
+	protected AssetLibrary testDeleteAssetLibraryBatch_addAssetLibrary()
+		throws Exception {
+
+		return testDeleteAssetLibrary_addAssetLibrary();
+	}
+
+	protected void testDeleteAssetLibraryBatch_deleteAssetLibrary(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			assetLibraryResource.deleteAssetLibraryBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
+	public void testDeleteAssetLibraryByExternalReferenceCode()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		AssetLibrary assetLibrary =
+			testDeleteAssetLibraryByExternalReferenceCode_addAssetLibrary();
+
+		assertHttpResponseStatusCode(
+			204,
+			assetLibraryResource.
+				deleteAssetLibraryByExternalReferenceCodeHttpResponse(
+					assetLibrary.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			assetLibraryResource.
+				getAssetLibraryByExternalReferenceCodeHttpResponse(
+					assetLibrary.getExternalReferenceCode()));
+		assertHttpResponseStatusCode(
+			404,
+			assetLibraryResource.
+				getAssetLibraryByExternalReferenceCodeHttpResponse("-"));
+	}
+
+	protected AssetLibrary
+			testDeleteAssetLibraryByExternalReferenceCode_addAssetLibrary()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testDeleteAssetLibraryByExternalReferenceCodePin()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		AssetLibrary assetLibrary =
+			testDeleteAssetLibraryByExternalReferenceCodePin_addAssetLibrary();
+
+		assertHttpResponseStatusCode(
+			204,
+			assetLibraryResource.
+				deleteAssetLibraryByExternalReferenceCodePinHttpResponse(
+					assetLibrary.getExternalReferenceCode()));
+	}
+
+	protected AssetLibrary
+			testDeleteAssetLibraryByExternalReferenceCodePin_addAssetLibrary()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testDeleteAssetLibraryPin() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		AssetLibrary assetLibrary = testDeleteAssetLibraryPin_addAssetLibrary();
+
+		assertHttpResponseStatusCode(
+			204,
+			assetLibraryResource.deleteAssetLibraryPinHttpResponse(
+				assetLibrary.getId()));
+	}
+
+	protected AssetLibrary testDeleteAssetLibraryPin_addAssetLibrary()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGetAssetLibrariesPage() throws Exception {
+		Page<AssetLibrary> page = assetLibraryResource.getAssetLibrariesPage(
+			null, null, null, Pagination.of(1, 10), null);
+
+		long totalCount = page.getTotalCount();
+
+		AssetLibrary assetLibrary1 = testGetAssetLibrariesPage_addAssetLibrary(
+			randomAssetLibrary());
+
+		AssetLibrary assetLibrary2 = testGetAssetLibrariesPage_addAssetLibrary(
+			randomAssetLibrary());
+
+		page = assetLibraryResource.getAssetLibrariesPage(
+			null, null, null, Pagination.of(1, 10), null);
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(assetLibrary1, (List<AssetLibrary>)page.getItems());
+		assertContains(assetLibrary2, (List<AssetLibrary>)page.getItems());
+		assertValid(page, testGetAssetLibrariesPage_getExpectedActions());
+
+		assetLibraryResource.deleteAssetLibrary(assetLibrary1.getId());
+
+		assetLibraryResource.deleteAssetLibrary(assetLibrary2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAssetLibrariesPage_getExpectedActions()
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	@Test
+	public void testGetAssetLibrariesPageWithFilterDateTimeEquals()
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(
+			EntityField.Type.DATE_TIME);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		AssetLibrary assetLibrary1 = randomAssetLibrary();
+
+		assetLibrary1 = testGetAssetLibrariesPage_addAssetLibrary(
+			assetLibrary1);
+
+		for (EntityField entityField : entityFields) {
+			Page<AssetLibrary> page =
+				assetLibraryResource.getAssetLibrariesPage(
+					null, null,
+					getFilterString(entityField, "between", assetLibrary1),
+					Pagination.of(1, 2), null);
+
+			assertEquals(
+				Collections.singletonList(assetLibrary1),
+				(List<AssetLibrary>)page.getItems());
+		}
+	}
+
+	@Test
+	public void testGetAssetLibrariesPageWithFilterDoubleEquals()
+		throws Exception {
+
+		testGetAssetLibrariesPageWithFilter("eq", EntityField.Type.DOUBLE);
+	}
+
+	@Test
+	public void testGetAssetLibrariesPageWithFilterStringContains()
+		throws Exception {
+
+		testGetAssetLibrariesPageWithFilter(
+			"contains", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetAssetLibrariesPageWithFilterStringEquals()
+		throws Exception {
+
+		testGetAssetLibrariesPageWithFilter("eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetAssetLibrariesPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetAssetLibrariesPageWithFilter(
+			"startswith", EntityField.Type.STRING);
+	}
+
+	protected void testGetAssetLibrariesPageWithFilter(
+			String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		AssetLibrary assetLibrary1 = testGetAssetLibrariesPage_addAssetLibrary(
+			randomAssetLibrary());
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		AssetLibrary assetLibrary2 = testGetAssetLibrariesPage_addAssetLibrary(
+			randomAssetLibrary());
+
+		for (EntityField entityField : entityFields) {
+			Page<AssetLibrary> page =
+				assetLibraryResource.getAssetLibrariesPage(
+					null, null,
+					getFilterString(entityField, operator, assetLibrary1),
+					Pagination.of(1, 2), null);
+
+			assertEquals(
+				Collections.singletonList(assetLibrary1),
+				(List<AssetLibrary>)page.getItems());
+		}
+	}
+
+	@Test
+	public void testGetAssetLibrariesPageWithPagination() throws Exception {
+		Page<AssetLibrary> assetLibrariesPage =
+			assetLibraryResource.getAssetLibrariesPage(
+				null, null, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(
+			assetLibrariesPage.getTotalCount());
+
+		AssetLibrary assetLibrary1 = testGetAssetLibrariesPage_addAssetLibrary(
+			randomAssetLibrary());
+
+		AssetLibrary assetLibrary2 = testGetAssetLibrariesPage_addAssetLibrary(
+			randomAssetLibrary());
+
+		AssetLibrary assetLibrary3 = testGetAssetLibrariesPage_addAssetLibrary(
+			randomAssetLibrary());
+
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
+
+		int pageSizeLimit = 500;
+
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<AssetLibrary> page1 =
+				assetLibraryResource.getAssetLibrariesPage(
+					null, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
+
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
+
+			assertContains(assetLibrary1, (List<AssetLibrary>)page1.getItems());
+
+			Page<AssetLibrary> page2 =
+				assetLibraryResource.getAssetLibrariesPage(
+					null, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
+
+			assertContains(assetLibrary2, (List<AssetLibrary>)page2.getItems());
+
+			Page<AssetLibrary> page3 =
+				assetLibraryResource.getAssetLibrariesPage(
+					null, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
+
+			assertContains(assetLibrary3, (List<AssetLibrary>)page3.getItems());
+		}
+		else {
+			Page<AssetLibrary> page1 =
+				assetLibraryResource.getAssetLibrariesPage(
+					null, null, null, Pagination.of(1, totalCount + 2), null);
+
+			List<AssetLibrary> assetLibraries1 =
+				(List<AssetLibrary>)page1.getItems();
+
+			Assert.assertEquals(
+				assetLibraries1.toString(), totalCount + 2,
+				assetLibraries1.size());
+
+			Page<AssetLibrary> page2 =
+				assetLibraryResource.getAssetLibrariesPage(
+					null, null, null, Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<AssetLibrary> assetLibraries2 =
+				(List<AssetLibrary>)page2.getItems();
+
+			Assert.assertEquals(
+				assetLibraries2.toString(), 1, assetLibraries2.size());
+
+			Page<AssetLibrary> page3 =
+				assetLibraryResource.getAssetLibrariesPage(
+					null, null, null, Pagination.of(1, (int)totalCount + 3),
+					null);
+
+			assertContains(assetLibrary1, (List<AssetLibrary>)page3.getItems());
+			assertContains(assetLibrary2, (List<AssetLibrary>)page3.getItems());
+			assertContains(assetLibrary3, (List<AssetLibrary>)page3.getItems());
+		}
+	}
+
+	@Test
+	public void testGetAssetLibrariesPageWithSortDateTime() throws Exception {
+		testGetAssetLibrariesPageWithSort(
+			EntityField.Type.DATE_TIME,
+			(entityField, assetLibrary1, assetLibrary2) -> {
+				BeanTestUtil.setProperty(
+					assetLibrary1, entityField.getName(),
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
+			});
+	}
+
+	@Test
+	public void testGetAssetLibrariesPageWithSortDouble() throws Exception {
+		testGetAssetLibrariesPageWithSort(
+			EntityField.Type.DOUBLE,
+			(entityField, assetLibrary1, assetLibrary2) -> {
+				BeanTestUtil.setProperty(
+					assetLibrary1, entityField.getName(), 0.1);
+				BeanTestUtil.setProperty(
+					assetLibrary2, entityField.getName(), 0.5);
+			});
+	}
+
+	@Test
+	public void testGetAssetLibrariesPageWithSortInteger() throws Exception {
+		testGetAssetLibrariesPageWithSort(
+			EntityField.Type.INTEGER,
+			(entityField, assetLibrary1, assetLibrary2) -> {
+				BeanTestUtil.setProperty(
+					assetLibrary1, entityField.getName(), 0);
+				BeanTestUtil.setProperty(
+					assetLibrary2, entityField.getName(), 1);
+			});
+	}
+
+	@Test
+	public void testGetAssetLibrariesPageWithSortString() throws Exception {
+		testGetAssetLibrariesPageWithSort(
+			EntityField.Type.STRING,
+			(entityField, assetLibrary1, assetLibrary2) -> {
+				Class<?> clazz = assetLibrary1.getClass();
+
+				String entityFieldName = entityField.getName();
+
+				Method method = clazz.getMethod(
+					"get" + StringUtil.upperCaseFirstLetter(entityFieldName));
+
+				Class<?> returnType = method.getReturnType();
+
+				if (returnType.isAssignableFrom(Map.class)) {
+					BeanTestUtil.setProperty(
+						assetLibrary1, entityFieldName,
+						Collections.singletonMap("Aaa", "Aaa"));
+					BeanTestUtil.setProperty(
+						assetLibrary2, entityFieldName,
+						Collections.singletonMap("Bbb", "Bbb"));
+				}
+				else if (entityFieldName.contains("email")) {
+					BeanTestUtil.setProperty(
+						assetLibrary1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+					BeanTestUtil.setProperty(
+						assetLibrary2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+				}
+				else {
+					BeanTestUtil.setProperty(
+						assetLibrary1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+					BeanTestUtil.setProperty(
+						assetLibrary2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+				}
+			});
+	}
+
+	protected void testGetAssetLibrariesPageWithSort(
+			EntityField.Type type,
+			UnsafeTriConsumer
+				<EntityField, AssetLibrary, AssetLibrary, Exception>
+					unsafeTriConsumer)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		AssetLibrary assetLibrary1 = randomAssetLibrary();
+		AssetLibrary assetLibrary2 = randomAssetLibrary();
+
+		for (EntityField entityField : entityFields) {
+			unsafeTriConsumer.accept(entityField, assetLibrary1, assetLibrary2);
+		}
+
+		assetLibrary1 = testGetAssetLibrariesPage_addAssetLibrary(
+			assetLibrary1);
+
+		assetLibrary2 = testGetAssetLibrariesPage_addAssetLibrary(
+			assetLibrary2);
+
+		Page<AssetLibrary> page = assetLibraryResource.getAssetLibrariesPage(
+			null, null, null, null, null);
+
+		for (EntityField entityField : entityFields) {
+			Page<AssetLibrary> ascPage =
+				assetLibraryResource.getAssetLibrariesPage(
+					null, null, null,
+					Pagination.of(1, (int)page.getTotalCount() + 1),
+					entityField.getName() + ":asc");
+
+			assertContains(
+				assetLibrary1, (List<AssetLibrary>)ascPage.getItems());
+			assertContains(
+				assetLibrary2, (List<AssetLibrary>)ascPage.getItems());
+
+			Page<AssetLibrary> descPage =
+				assetLibraryResource.getAssetLibrariesPage(
+					null, null, null,
+					Pagination.of(1, (int)page.getTotalCount() + 1),
+					entityField.getName() + ":desc");
+
+			assertContains(
+				assetLibrary2, (List<AssetLibrary>)descPage.getItems());
+			assertContains(
+				assetLibrary1, (List<AssetLibrary>)descPage.getItems());
+		}
+	}
+
+	protected AssetLibrary testGetAssetLibrariesPage_addAssetLibrary(
+			AssetLibrary assetLibrary)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGetAssetLibrariesPinnedByMePage() throws Exception {
+		Page<AssetLibrary> page =
+			assetLibraryResource.getAssetLibrariesPinnedByMePage(
+				Pagination.of(1, 10));
+
+		long totalCount = page.getTotalCount();
+
+		AssetLibrary assetLibrary1 =
+			testGetAssetLibrariesPinnedByMePage_addAssetLibrary(
+				randomAssetLibrary());
+
+		AssetLibrary assetLibrary2 =
+			testGetAssetLibrariesPinnedByMePage_addAssetLibrary(
+				randomAssetLibrary());
+
+		page = assetLibraryResource.getAssetLibrariesPinnedByMePage(
+			Pagination.of(1, 10));
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(assetLibrary1, (List<AssetLibrary>)page.getItems());
+		assertContains(assetLibrary2, (List<AssetLibrary>)page.getItems());
+		assertValid(
+			page, testGetAssetLibrariesPinnedByMePage_getExpectedActions());
+
+		assetLibraryResource.deleteAssetLibrary(assetLibrary1.getId());
+
+		assetLibraryResource.deleteAssetLibrary(assetLibrary2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAssetLibrariesPinnedByMePage_getExpectedActions()
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	@Test
+	public void testGetAssetLibrariesPinnedByMePageWithPagination()
+		throws Exception {
+
+		Page<AssetLibrary> assetLibrariesPage =
+			assetLibraryResource.getAssetLibrariesPinnedByMePage(null);
+
+		int totalCount = GetterUtil.getInteger(
+			assetLibrariesPage.getTotalCount());
+
+		AssetLibrary assetLibrary1 =
+			testGetAssetLibrariesPinnedByMePage_addAssetLibrary(
+				randomAssetLibrary());
+
+		AssetLibrary assetLibrary2 =
+			testGetAssetLibrariesPinnedByMePage_addAssetLibrary(
+				randomAssetLibrary());
+
+		AssetLibrary assetLibrary3 =
+			testGetAssetLibrariesPinnedByMePage_addAssetLibrary(
+				randomAssetLibrary());
+
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
+
+		int pageSizeLimit = 500;
+
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<AssetLibrary> page1 =
+				assetLibraryResource.getAssetLibrariesPinnedByMePage(
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit));
+
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
+
+			assertContains(assetLibrary1, (List<AssetLibrary>)page1.getItems());
+
+			Page<AssetLibrary> page2 =
+				assetLibraryResource.getAssetLibrariesPinnedByMePage(
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit));
+
+			assertContains(assetLibrary2, (List<AssetLibrary>)page2.getItems());
+
+			Page<AssetLibrary> page3 =
+				assetLibraryResource.getAssetLibrariesPinnedByMePage(
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit));
+
+			assertContains(assetLibrary3, (List<AssetLibrary>)page3.getItems());
+		}
+		else {
+			Page<AssetLibrary> page1 =
+				assetLibraryResource.getAssetLibrariesPinnedByMePage(
+					Pagination.of(1, totalCount + 2));
+
+			List<AssetLibrary> assetLibraries1 =
+				(List<AssetLibrary>)page1.getItems();
+
+			Assert.assertEquals(
+				assetLibraries1.toString(), totalCount + 2,
+				assetLibraries1.size());
+
+			Page<AssetLibrary> page2 =
+				assetLibraryResource.getAssetLibrariesPinnedByMePage(
+					Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<AssetLibrary> assetLibraries2 =
+				(List<AssetLibrary>)page2.getItems();
+
+			Assert.assertEquals(
+				assetLibraries2.toString(), 1, assetLibraries2.size());
+
+			Page<AssetLibrary> page3 =
+				assetLibraryResource.getAssetLibrariesPinnedByMePage(
+					Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(assetLibrary1, (List<AssetLibrary>)page3.getItems());
+			assertContains(assetLibrary2, (List<AssetLibrary>)page3.getItems());
+			assertContains(assetLibrary3, (List<AssetLibrary>)page3.getItems());
+		}
+	}
+
+	protected AssetLibrary testGetAssetLibrariesPinnedByMePage_addAssetLibrary(
+			AssetLibrary assetLibrary)
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -334,7 +938,217 @@ public abstract class BaseAssetLibraryResourceTestCase {
 		assertValid(getAssetLibrary);
 	}
 
+	@Test
+	public void testVulcanCRUDItemDelegateGetItem() throws Exception {
+		AssetLibrary postAssetLibrary = testGetAssetLibrary_addAssetLibrary();
+
+		AssetLibrary getAssetLibrary = assetLibraryResource.getAssetLibrary(
+			postAssetLibrary.getId());
+
+		VulcanCRUDItemDelegate vulcanCRUDItemDelegate =
+			_vulcanCRUDItemDelegateBuilderRegistry.builder(
+				testCompany,
+				"com.liferay.headless.asset.library.dto.v1_0.AssetLibrary"
+			).acceptLanguage(
+				new AcceptLanguage() {
+
+					@Override
+					public List<Locale> getLocales() {
+						return Arrays.asList(LocaleUtil.getDefault());
+					}
+
+					@Override
+					public String getPreferredLanguageId() {
+						return LocaleUtil.toLanguageId(LocaleUtil.getDefault());
+					}
+
+					@Override
+					public Locale getPreferredLocale() {
+						return LocaleUtil.getDefault();
+					}
+
+				}
+			).groupLocalService(
+				_groupLocalService
+			).httpServletRequest(
+				testVulcanCRUDItemDelegate_getHttpServletRequest()
+			).httpServletResponse(
+				new MockHttpServletResponse()
+			).resourceActionLocalService(
+				_resourceActionLocalService
+			).resourcePermissionLocalService(
+				_resourcePermissionLocalService
+			).roleLocalService(
+				_roleLocalService
+			).scopeChecker(
+				_scopeChecker
+			).uriInfo(
+				testVulcanCRUDItemDelegate_getUriInfo()
+			).user(
+				testVulcanCRUDItemDelegate_getUser()
+			).build();
+
+		Object item = vulcanCRUDItemDelegate.getItem(postAssetLibrary.getId());
+
+		assertEquals(
+			getAssetLibrary, AssetLibrarySerDes.toDTO(item.toString()));
+	}
+
+	protected HttpServletRequest
+		testVulcanCRUDItemDelegate_getHttpServletRequest() {
+
+		return new MockHttpServletRequest() {
+
+			@Override
+			public StringBuffer getRequestURL() {
+				return new StringBuffer(
+					StringBundler.concat(
+						"http://localhost:8080/o/v1.0/",
+						RandomTestUtil.randomString(), "/",
+						RandomTestUtil.randomString()));
+			}
+
+		};
+	}
+
+	protected UriInfo testVulcanCRUDItemDelegate_getUriInfo() {
+		String applicationPath = RandomTestUtil.randomString() + "/";
+		String resourcePath = RandomTestUtil.randomString();
+
+		return new UriInfo() {
+
+			@Override
+			public String getPath() {
+				return resourcePath;
+			}
+
+			@Override
+			public String getPath(boolean decode) {
+				return getPath();
+			}
+
+			@Override
+			public List<PathSegment> getPathSegments() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public List<PathSegment> getPathSegments(boolean decode) {
+				return getPathSegments();
+			}
+
+			@Override
+			public URI getRequestUri() {
+				return URI.create(
+					"http://localhost:8080/o/" + applicationPath +
+						resourcePath);
+			}
+
+			@Override
+			public UriBuilder getRequestUriBuilder() {
+				return UriBuilder.fromUri(getRequestUri());
+			}
+
+			@Override
+			public URI getAbsolutePath() {
+				return getRequestUri();
+			}
+
+			@Override
+			public UriBuilder getAbsolutePathBuilder() {
+				return getRequestUriBuilder();
+			}
+
+			@Override
+			public URI getBaseUri() {
+				return URI.create("http://localhost:8080/o/" + applicationPath);
+			}
+
+			@Override
+			public UriBuilder getBaseUriBuilder() {
+				return UriBuilder.fromUri(getBaseUri());
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getPathParameters() {
+				return new MultivaluedHashMap<>();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getPathParameters(
+				boolean decode) {
+
+				return getPathParameters();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getQueryParameters() {
+				return new MultivaluedHashMap<>();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getQueryParameters(
+				boolean decode) {
+
+				return getQueryParameters();
+			}
+
+			@Override
+			public List<String> getMatchedURIs() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public List<String> getMatchedURIs(boolean decode) {
+				return getMatchedURIs();
+			}
+
+			@Override
+			public List<Object> getMatchedResources() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public URI resolve(URI requestUri) {
+				return getBaseUri().resolve(requestUri);
+			}
+
+			@Override
+			public URI relativize(URI uri) {
+				return getBaseUri().relativize(uri);
+			}
+
+		};
+	}
+
+	protected com.liferay.portal.kernel.model.User
+		testVulcanCRUDItemDelegate_getUser() {
+
+		return _testCompanyAdminUser;
+	}
+
 	protected AssetLibrary testGetAssetLibrary_addAssetLibrary()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGetAssetLibraryByExternalReferenceCode() throws Exception {
+		AssetLibrary postAssetLibrary =
+			testGetAssetLibraryByExternalReferenceCode_addAssetLibrary();
+
+		AssetLibrary getAssetLibrary =
+			assetLibraryResource.getAssetLibraryByExternalReferenceCode(
+				postAssetLibrary.getExternalReferenceCode());
+
+		assertEquals(postAssetLibrary, getAssetLibrary);
+		assertValid(getAssetLibrary);
+	}
+
+	protected AssetLibrary
+			testGetAssetLibraryByExternalReferenceCode_addAssetLibrary()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -357,7 +1171,7 @@ public abstract class BaseAssetLibraryResourceTestCase {
 			randomPatchAssetLibrary, expectedPatchAssetLibrary);
 
 		AssetLibrary getAssetLibrary = assetLibraryResource.getAssetLibrary(
-			patchAssetLibrary.getId());
+			testDepotEntry.getDepotEntryId());
 
 		assertEquals(expectedPatchAssetLibrary, getAssetLibrary);
 		assertValid(getAssetLibrary);
@@ -371,26 +1185,35 @@ public abstract class BaseAssetLibraryResourceTestCase {
 	}
 
 	@Test
-	public void testDeleteAssetLibraryLinkToSite() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		AssetLibrary assetLibrary =
-			testDeleteAssetLibraryLinkToSite_addAssetLibrary();
-
-		assertHttpResponseStatusCode(
-			204,
-			assetLibraryResource.deleteAssetLibraryLinkToSiteHttpResponse(
-				assetLibrary.getId(),
-				testDeleteAssetLibraryLinkToSite_getToSiteId()));
-	}
-
-	protected Long testDeleteAssetLibraryLinkToSite_getToSiteId()
+	public void testPatchAssetLibraryByExternalReferenceCode()
 		throws Exception {
 
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+		AssetLibrary postAssetLibrary =
+			testPatchAssetLibraryByExternalReferenceCode_addAssetLibrary();
+
+		AssetLibrary randomPatchAssetLibrary = randomPatchAssetLibrary();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		AssetLibrary patchAssetLibrary =
+			assetLibraryResource.patchAssetLibraryByExternalReferenceCode(
+				postAssetLibrary.getExternalReferenceCode(),
+				randomPatchAssetLibrary);
+
+		AssetLibrary expectedPatchAssetLibrary = postAssetLibrary.clone();
+
+		BeanTestUtil.copyProperties(
+			randomPatchAssetLibrary, expectedPatchAssetLibrary);
+
+		AssetLibrary getAssetLibrary =
+			assetLibraryResource.getAssetLibraryByExternalReferenceCode(
+				patchAssetLibrary.getExternalReferenceCode());
+
+		assertEquals(expectedPatchAssetLibrary, getAssetLibrary);
+		assertValid(getAssetLibrary);
 	}
 
-	protected AssetLibrary testDeleteAssetLibraryLinkToSite_addAssetLibrary()
+	protected AssetLibrary
+			testPatchAssetLibraryByExternalReferenceCode_addAssetLibrary()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -398,17 +1221,17 @@ public abstract class BaseAssetLibraryResourceTestCase {
 	}
 
 	@Test
-	public void testPostAssetLibraryLinkToSite() throws Exception {
+	public void testPostAssetLibrary() throws Exception {
 		AssetLibrary randomAssetLibrary = randomAssetLibrary();
 
-		AssetLibrary postAssetLibrary =
-			testPostAssetLibraryLinkToSite_addAssetLibrary(randomAssetLibrary);
+		AssetLibrary postAssetLibrary = testPostAssetLibrary_addAssetLibrary(
+			randomAssetLibrary);
 
 		assertEquals(randomAssetLibrary, postAssetLibrary);
 		assertValid(postAssetLibrary);
 	}
 
-	protected AssetLibrary testPostAssetLibraryLinkToSite_addAssetLibrary(
+	protected AssetLibrary testPostAssetLibrary_addAssetLibrary(
 			AssetLibrary assetLibrary)
 		throws Exception {
 
@@ -416,12 +1239,231 @@ public abstract class BaseAssetLibraryResourceTestCase {
 			"This method needs to be implemented");
 	}
 
-	protected AssetLibrary testGraphQLAssetLibrary_addAssetLibrary()
+	@Test
+	public void testPutAssetLibraryByExternalReferenceCode() throws Exception {
+		AssetLibrary postAssetLibrary =
+			testPutAssetLibraryByExternalReferenceCode_addAssetLibrary();
+
+		AssetLibrary randomAssetLibrary = randomAssetLibrary();
+
+		AssetLibrary putAssetLibrary =
+			assetLibraryResource.putAssetLibraryByExternalReferenceCode(
+				postAssetLibrary.getExternalReferenceCode(),
+				randomAssetLibrary);
+
+		assertEquals(randomAssetLibrary, putAssetLibrary);
+		assertValid(putAssetLibrary);
+
+		AssetLibrary getAssetLibrary =
+			assetLibraryResource.getAssetLibraryByExternalReferenceCode(
+				putAssetLibrary.getExternalReferenceCode());
+
+		assertEquals(randomAssetLibrary, getAssetLibrary);
+		assertValid(getAssetLibrary);
+
+		AssetLibrary newAssetLibrary =
+			testPutAssetLibraryByExternalReferenceCode_createAssetLibrary();
+
+		putAssetLibrary =
+			assetLibraryResource.putAssetLibraryByExternalReferenceCode(
+				newAssetLibrary.getExternalReferenceCode(), newAssetLibrary);
+
+		assertEquals(newAssetLibrary, putAssetLibrary);
+		assertValid(putAssetLibrary);
+
+		getAssetLibrary =
+			assetLibraryResource.getAssetLibraryByExternalReferenceCode(
+				putAssetLibrary.getExternalReferenceCode());
+
+		assertEquals(newAssetLibrary, getAssetLibrary);
+
+		Assert.assertEquals(
+			newAssetLibrary.getExternalReferenceCode(),
+			putAssetLibrary.getExternalReferenceCode());
+	}
+
+	protected AssetLibrary
+			testPutAssetLibraryByExternalReferenceCode_addAssetLibrary()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
+
+	protected AssetLibrary
+			testPutAssetLibraryByExternalReferenceCode_createAssetLibrary()
+		throws Exception {
+
+		return randomAssetLibrary();
+	}
+
+	@Test
+	public void testPutAssetLibraryByExternalReferenceCodePin()
+		throws Exception {
+
+		AssetLibrary postAssetLibrary =
+			testPutAssetLibraryByExternalReferenceCodePin_addAssetLibrary();
+
+		AssetLibrary randomAssetLibrary = randomAssetLibrary();
+
+		AssetLibrary putAssetLibrary =
+			assetLibraryResource.putAssetLibraryByExternalReferenceCodePin(
+				postAssetLibrary.getExternalReferenceCode());
+
+		assertEquals(randomAssetLibrary, putAssetLibrary);
+		assertValid(putAssetLibrary);
+
+		AssetLibrary getAssetLibrary =
+			testPutAssetLibraryByExternalReferenceCodePin_getAssetLibrary(
+				putAssetLibrary.getExternalReferenceCode());
+
+		assertEquals(randomAssetLibrary, getAssetLibrary);
+		assertValid(getAssetLibrary);
+	}
+
+	protected AssetLibrary
+		testPutAssetLibraryByExternalReferenceCodePin_getAssetLibrary(
+			String externalReferenceCode) {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected AssetLibrary
+			testPutAssetLibraryByExternalReferenceCodePin_addAssetLibrary()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPutAssetLibraryPin() throws Exception {
+		AssetLibrary postAssetLibrary =
+			testPutAssetLibraryPin_addAssetLibrary();
+
+		AssetLibrary randomAssetLibrary = randomAssetLibrary();
+
+		AssetLibrary putAssetLibrary = assetLibraryResource.putAssetLibraryPin(
+			postAssetLibrary.getId());
+
+		assertEquals(randomAssetLibrary, putAssetLibrary);
+		assertValid(putAssetLibrary);
+
+		AssetLibrary getAssetLibrary = testPutAssetLibraryPin_getAssetLibrary(
+			putAssetLibrary.getId());
+
+		assertEquals(randomAssetLibrary, getAssetLibrary);
+		assertValid(getAssetLibrary);
+	}
+
+	protected AssetLibrary testPutAssetLibraryPin_getAssetLibrary(
+		Long assetLibraryId) {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected AssetLibrary testPutAssetLibraryPin_addAssetLibrary()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		AssetLibrary assetLibrary1 =
+			testBatchEngineDeleteImportTask_addAssetLibrary();
+
+		testBatchEngineDeleteImportTask_deleteAssetLibrary(
+			200, assetLibrary1.getExternalReferenceCode(), null);
+
+		assertHttpResponseStatusCode(
+			404,
+			assetLibraryResource.getAssetLibraryHttpResponse(
+				assetLibrary1.getId()));
+
+		assetLibrary1 = testBatchEngineDeleteImportTask_addAssetLibrary();
+
+		testBatchEngineDeleteImportTask_deleteAssetLibrary(
+			200, null, assetLibrary1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			assetLibraryResource.getAssetLibraryHttpResponse(
+				assetLibrary1.getId()));
+
+		assetLibrary1 = testBatchEngineDeleteImportTask_addAssetLibrary();
+		AssetLibrary assetLibrary2 =
+			testBatchEngineDeleteImportTask_addAssetLibrary();
+
+		testBatchEngineDeleteImportTask_deleteAssetLibrary(
+			200, assetLibrary2.getExternalReferenceCode(),
+			assetLibrary1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			assetLibraryResource.getAssetLibraryHttpResponse(
+				assetLibrary1.getId()));
+		assertHttpResponseStatusCode(
+			200,
+			assetLibraryResource.getAssetLibraryHttpResponse(
+				assetLibrary2.getId()));
+
+		testBatchEngineDeleteImportTask_deleteAssetLibrary(
+			200, assetLibrary2.getExternalReferenceCode(),
+			assetLibrary1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			assetLibraryResource.getAssetLibraryHttpResponse(
+				assetLibrary2.getId()));
+	}
+
+	protected AssetLibrary testBatchEngineDeleteImportTask_addAssetLibrary()
+		throws Exception {
+
+		return testDeleteAssetLibrary_addAssetLibrary();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteAssetLibrary(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.asset.library.dto.v1_0.AssetLibrary",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
+	}
+
+	@Rule
+	public SearchTestRule searchTestRule = new SearchTestRule();
 
 	protected void assertContains(
 		AssetLibrary assetLibrary, List<AssetLibrary> assetLibraries) {
@@ -508,20 +1550,43 @@ public abstract class BaseAssetLibraryResourceTestCase {
 			valid = false;
 		}
 
-		com.liferay.portal.kernel.model.Group group = testDepotEntry.getGroup();
-
-		if (!Objects.equals(
-				assetLibrary.getAssetLibraryKey(), group.getGroupKey()) &&
-			!Objects.equals(assetLibrary.getSiteId(), testGroup.getGroupId())) {
-
-			valid = false;
-		}
-
 		for (String additionalAssertFieldName :
 				getAdditionalAssertFieldNames()) {
 
+			if (Objects.equals("actions", additionalAssertFieldName)) {
+				if (assetLibrary.getActions() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("assetLibraryKey", additionalAssertFieldName)) {
 				if (assetLibrary.getAssetLibraryKey() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("connectedSiteId", additionalAssertFieldName)) {
+				if (assetLibrary.getConnectedSiteId() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("connectedSites", additionalAssertFieldName)) {
+				if (assetLibrary.getConnectedSites() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("creatorUserId", additionalAssertFieldName)) {
+				if (assetLibrary.getCreatorUserId() == null) {
 					valid = false;
 				}
 
@@ -554,27 +1619,6 @@ public abstract class BaseAssetLibraryResourceTestCase {
 				continue;
 			}
 
-			if (Objects.equals("linkedSiteIds", additionalAssertFieldName)) {
-				if (assetLibrary.getLinkedSiteIds() == null) {
-					valid = false;
-				}
-
-				continue;
-			}
-
-			if (Objects.equals(
-					"linkedSitesExternalReferenceCodes",
-					additionalAssertFieldName)) {
-
-				if (assetLibrary.getLinkedSitesExternalReferenceCodes() ==
-						null) {
-
-					valid = false;
-				}
-
-				continue;
-			}
-
 			if (Objects.equals("name", additionalAssertFieldName)) {
 				if (assetLibrary.getName() == null) {
 					valid = false;
@@ -585,6 +1629,68 @@ public abstract class BaseAssetLibraryResourceTestCase {
 
 			if (Objects.equals("name_i18n", additionalAssertFieldName)) {
 				if (assetLibrary.getName_i18n() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"numberOfConnectedSites", additionalAssertFieldName)) {
+
+				if (assetLibrary.getNumberOfConnectedSites() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"numberOfUserAccounts", additionalAssertFieldName)) {
+
+				if (assetLibrary.getNumberOfUserAccounts() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"numberOfUserGroups", additionalAssertFieldName)) {
+
+				if (assetLibrary.getNumberOfUserGroups() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("settings", additionalAssertFieldName)) {
+				if (assetLibrary.getSettings() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("type", additionalAssertFieldName)) {
+				if (assetLibrary.getType() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("userAccounts", additionalAssertFieldName)) {
+				if (assetLibrary.getUserAccounts() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("userGroups", additionalAssertFieldName)) {
+				if (assetLibrary.getUserGroups() == null) {
 					valid = false;
 				}
 
@@ -649,8 +1755,6 @@ public abstract class BaseAssetLibraryResourceTestCase {
 	protected List<GraphQLField> getGraphQLFields() throws Exception {
 		List<GraphQLField> graphQLFields = new ArrayList<>();
 
-		graphQLFields.add(new GraphQLField("siteId"));
-
 		for (java.lang.reflect.Field field :
 				getDeclaredFields(
 					com.liferay.headless.asset.library.dto.v1_0.AssetLibrary.
@@ -711,6 +1815,50 @@ public abstract class BaseAssetLibraryResourceTestCase {
 
 		for (String additionalAssertFieldName :
 				getAdditionalAssertFieldNames()) {
+
+			if (Objects.equals("actions", additionalAssertFieldName)) {
+				if (!equals(
+						(Map)assetLibrary1.getActions(),
+						(Map)assetLibrary2.getActions())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("connectedSiteId", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						assetLibrary1.getConnectedSiteId(),
+						assetLibrary2.getConnectedSiteId())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("connectedSites", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						assetLibrary1.getConnectedSites(),
+						assetLibrary2.getConnectedSites())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("creatorUserId", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						assetLibrary1.getCreatorUserId(),
+						assetLibrary2.getCreatorUserId())) {
+
+					return false;
+				}
+
+				continue;
+			}
 
 			if (Objects.equals("dateCreated", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
@@ -779,31 +1927,6 @@ public abstract class BaseAssetLibraryResourceTestCase {
 				continue;
 			}
 
-			if (Objects.equals("linkedSiteIds", additionalAssertFieldName)) {
-				if (!Objects.deepEquals(
-						assetLibrary1.getLinkedSiteIds(),
-						assetLibrary2.getLinkedSiteIds())) {
-
-					return false;
-				}
-
-				continue;
-			}
-
-			if (Objects.equals(
-					"linkedSitesExternalReferenceCodes",
-					additionalAssertFieldName)) {
-
-				if (!Objects.deepEquals(
-						assetLibrary1.getLinkedSitesExternalReferenceCodes(),
-						assetLibrary2.getLinkedSitesExternalReferenceCodes())) {
-
-					return false;
-				}
-
-				continue;
-			}
-
 			if (Objects.equals("name", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						assetLibrary1.getName(), assetLibrary2.getName())) {
@@ -818,6 +1941,88 @@ public abstract class BaseAssetLibraryResourceTestCase {
 				if (!equals(
 						(Map)assetLibrary1.getName_i18n(),
 						(Map)assetLibrary2.getName_i18n())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"numberOfConnectedSites", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						assetLibrary1.getNumberOfConnectedSites(),
+						assetLibrary2.getNumberOfConnectedSites())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"numberOfUserAccounts", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						assetLibrary1.getNumberOfUserAccounts(),
+						assetLibrary2.getNumberOfUserAccounts())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"numberOfUserGroups", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						assetLibrary1.getNumberOfUserGroups(),
+						assetLibrary2.getNumberOfUserGroups())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("settings", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						assetLibrary1.getSettings(),
+						assetLibrary2.getSettings())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("type", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						assetLibrary1.getType(), assetLibrary2.getType())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("userAccounts", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						assetLibrary1.getUserAccounts(),
+						assetLibrary2.getUserAccounts())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("userGroups", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						assetLibrary1.getUserGroups(),
+						assetLibrary2.getUserGroups())) {
 
 					return false;
 				}
@@ -932,6 +2137,11 @@ public abstract class BaseAssetLibraryResourceTestCase {
 		sb.append(operator);
 		sb.append(" ");
 
+		if (entityFieldName.equals("actions")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		if (entityFieldName.equals("assetLibraryKey")) {
 			Object object = assetLibrary.getAssetLibraryKey();
 
@@ -978,6 +2188,21 @@ public abstract class BaseAssetLibraryResourceTestCase {
 			return sb.toString();
 		}
 
+		if (entityFieldName.equals("connectedSiteId")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("connectedSites")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("creatorUserId")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		if (entityFieldName.equals("dateCreated")) {
 			if (operator.equals("between")) {
 				Date date = assetLibrary.getDateCreated();
@@ -987,13 +2212,11 @@ public abstract class BaseAssetLibraryResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1003,7 +2226,7 @@ public abstract class BaseAssetLibraryResourceTestCase {
 				sb.append(operator);
 				sb.append(" ");
 
-				sb.append(_dateFormat.format(assetLibrary.getDateCreated()));
+				sb.append(_format.format(assetLibrary.getDateCreated()));
 			}
 
 			return sb.toString();
@@ -1018,13 +2241,11 @@ public abstract class BaseAssetLibraryResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1034,7 +2255,7 @@ public abstract class BaseAssetLibraryResourceTestCase {
 				sb.append(operator);
 				sb.append(" ");
 
-				sb.append(_dateFormat.format(assetLibrary.getDateModified()));
+				sb.append(_format.format(assetLibrary.getDateModified()));
 			}
 
 			return sb.toString();
@@ -1142,16 +2363,6 @@ public abstract class BaseAssetLibraryResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
-		if (entityFieldName.equals("linkedSiteIds")) {
-			throw new IllegalArgumentException(
-				"Invalid entity field " + entityFieldName);
-		}
-
-		if (entityFieldName.equals("linkedSitesExternalReferenceCodes")) {
-			throw new IllegalArgumentException(
-				"Invalid entity field " + entityFieldName);
-		}
-
 		if (entityFieldName.equals("name")) {
 			Object object = assetLibrary.getName();
 
@@ -1203,7 +2414,40 @@ public abstract class BaseAssetLibraryResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
-		if (entityFieldName.equals("siteId")) {
+		if (entityFieldName.equals("numberOfConnectedSites")) {
+			sb.append(String.valueOf(assetLibrary.getNumberOfConnectedSites()));
+
+			return sb.toString();
+		}
+
+		if (entityFieldName.equals("numberOfUserAccounts")) {
+			sb.append(String.valueOf(assetLibrary.getNumberOfUserAccounts()));
+
+			return sb.toString();
+		}
+
+		if (entityFieldName.equals("numberOfUserGroups")) {
+			sb.append(String.valueOf(assetLibrary.getNumberOfUserGroups()));
+
+			return sb.toString();
+		}
+
+		if (entityFieldName.equals("settings")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("type")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("userAccounts")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("userGroups")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
 		}
@@ -1253,8 +2497,10 @@ public abstract class BaseAssetLibraryResourceTestCase {
 	protected AssetLibrary randomAssetLibrary() throws Exception {
 		return new AssetLibrary() {
 			{
-				assetLibraryKey = StringUtil.toLowerCase(
-					RandomTestUtil.randomString());
+				assetLibraryKey = String.valueOf(
+					testDepotEntry.getDepotEntryId());
+				connectedSiteId = RandomTestUtil.randomLong();
+				creatorUserId = RandomTestUtil.randomLong();
 				dateCreated = RandomTestUtil.nextDate();
 				dateModified = RandomTestUtil.nextDate();
 				description = StringUtil.toLowerCase(
@@ -1263,7 +2509,9 @@ public abstract class BaseAssetLibraryResourceTestCase {
 					RandomTestUtil.randomString());
 				id = RandomTestUtil.randomLong();
 				name = StringUtil.toLowerCase(RandomTestUtil.randomString());
-				siteId = testGroup.getGroupId();
+				numberOfConnectedSites = RandomTestUtil.randomInt();
+				numberOfUserAccounts = RandomTestUtil.randomInt();
+				numberOfUserGroups = RandomTestUtil.randomInt();
 			}
 		};
 	}
@@ -1271,7 +2519,8 @@ public abstract class BaseAssetLibraryResourceTestCase {
 	protected AssetLibrary randomIrrelevantAssetLibrary() throws Exception {
 		AssetLibrary randomIrrelevantAssetLibrary = randomAssetLibrary();
 
-		randomIrrelevantAssetLibrary.setSiteId(irrelevantGroup.getGroupId());
+		randomIrrelevantAssetLibrary.setAssetLibraryKey(
+			String.valueOf(irrelevantDepotEntry.getDepotEntryId()));
 
 		return randomIrrelevantAssetLibrary;
 	}
@@ -1280,10 +2529,36 @@ public abstract class BaseAssetLibraryResourceTestCase {
 		return randomAssetLibrary();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected AssetLibraryResource assetLibraryResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected DepotEntry irrelevantDepotEntry;
+	protected com.liferay.portal.kernel.model.Group irrelevantDepotEntryGroup;
 	protected DepotEntry testDepotEntry;
+	protected com.liferay.portal.kernel.model.Group testDepotEntryGroup;
 	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
@@ -1482,11 +2757,35 @@ public abstract class BaseAssetLibraryResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseAssetLibraryResourceTestCase.class);
 
-	private static DateFormat _dateFormat;
+	private static Format _format;
+
+	private com.liferay.portal.kernel.model.User _testCompanyAdminUser;
 
 	@Inject
 	private
 		com.liferay.headless.asset.library.resource.v1_0.AssetLibraryResource
 			_assetLibraryResource;
+
+	@Inject
+	private GroupLocalService _groupLocalService;
+
+	@Inject
+	private ResourceActionLocalService _resourceActionLocalService;
+
+	@Inject
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
+
+	@Inject
+	private RoleLocalService _roleLocalService;
+
+	@Inject
+	private ScopeChecker _scopeChecker;
+
+	@Inject
+	private UserLocalService _userLocalService;
+
+	@Inject
+	private VulcanCRUDItemDelegateBuilderRegistry
+		_vulcanCRUDItemDelegateBuilderRegistry;
 
 }
