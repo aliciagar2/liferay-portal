@@ -8,6 +8,8 @@ package com.liferay.headless.object.client.serdes.v1_0;
 import com.liferay.headless.object.client.dto.v1_0.ObjectEntryFolder;
 import com.liferay.headless.object.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
@@ -16,8 +18,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Alicia García
@@ -100,6 +100,20 @@ public class ObjectEntryFolderSerDes {
 			sb.append(
 				liferayToJSONDateFormat.format(
 					objectEntryFolder.getDateModified()));
+
+			sb.append("\"");
+		}
+
+		if (objectEntryFolder.getDescription() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"description\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(objectEntryFolder.getDescription()));
 
 			sb.append("\"");
 		}
@@ -213,6 +227,74 @@ public class ObjectEntryFolderSerDes {
 			sb.append(objectEntryFolder.getParentObjectEntryFolderId());
 		}
 
+		if (objectEntryFolder.getPermissions() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"permissions\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < objectEntryFolder.getPermissions().length;
+				 i++) {
+
+				sb.append(objectEntryFolder.getPermissions()[i]);
+
+				if ((i + 1) < objectEntryFolder.getPermissions().length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
+		if (objectEntryFolder.getRemovedBy() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"removedBy\": ");
+
+			sb.append(objectEntryFolder.getRemovedBy());
+		}
+
+		if (objectEntryFolder.getRemovedDate() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"removedDate\": ");
+
+			sb.append("\"");
+
+			sb.append(
+				liferayToJSONDateFormat.format(
+					objectEntryFolder.getRemovedDate()));
+
+			sb.append("\"");
+		}
+
+		if (objectEntryFolder.getScope() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"scope\": ");
+
+			sb.append(String.valueOf(objectEntryFolder.getScope()));
+		}
+
+		if (objectEntryFolder.getScopeId() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"scopeId\": ");
+
+			sb.append(objectEntryFolder.getScopeId());
+		}
+
 		if (objectEntryFolder.getScopeKey() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -225,6 +307,16 @@ public class ObjectEntryFolderSerDes {
 			sb.append(_escape(objectEntryFolder.getScopeKey()));
 
 			sb.append("\"");
+		}
+
+		if (objectEntryFolder.getStatus() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"status\": ");
+
+			sb.append(String.valueOf(objectEntryFolder.getStatus()));
 		}
 
 		if (objectEntryFolder.getTitle() != null) {
@@ -313,6 +405,15 @@ public class ObjectEntryFolderSerDes {
 					objectEntryFolder.getDateModified()));
 		}
 
+		if (objectEntryFolder.getDescription() == null) {
+			map.put("description", null);
+		}
+		else {
+			map.put(
+				"description",
+				String.valueOf(objectEntryFolder.getDescription()));
+		}
+
 		if (objectEntryFolder.getExternalReferenceCode() == null) {
 			map.put("externalReferenceCode", null);
 		}
@@ -397,12 +498,60 @@ public class ObjectEntryFolderSerDes {
 					objectEntryFolder.getParentObjectEntryFolderId()));
 		}
 
+		if (objectEntryFolder.getPermissions() == null) {
+			map.put("permissions", null);
+		}
+		else {
+			map.put(
+				"permissions",
+				String.valueOf(objectEntryFolder.getPermissions()));
+		}
+
+		if (objectEntryFolder.getRemovedBy() == null) {
+			map.put("removedBy", null);
+		}
+		else {
+			map.put(
+				"removedBy", String.valueOf(objectEntryFolder.getRemovedBy()));
+		}
+
+		if (objectEntryFolder.getRemovedDate() == null) {
+			map.put("removedDate", null);
+		}
+		else {
+			map.put(
+				"removedDate",
+				liferayToJSONDateFormat.format(
+					objectEntryFolder.getRemovedDate()));
+		}
+
+		if (objectEntryFolder.getScope() == null) {
+			map.put("scope", null);
+		}
+		else {
+			map.put("scope", String.valueOf(objectEntryFolder.getScope()));
+		}
+
+		if (objectEntryFolder.getScopeId() == null) {
+			map.put("scopeId", null);
+		}
+		else {
+			map.put("scopeId", String.valueOf(objectEntryFolder.getScopeId()));
+		}
+
 		if (objectEntryFolder.getScopeKey() == null) {
 			map.put("scopeKey", null);
 		}
 		else {
 			map.put(
 				"scopeKey", String.valueOf(objectEntryFolder.getScopeKey()));
+		}
+
+		if (objectEntryFolder.getStatus() == null) {
+			map.put("status", null);
+		}
+		else {
+			map.put("status", String.valueOf(objectEntryFolder.getStatus()));
 		}
 
 		if (objectEntryFolder.getTitle() == null) {
@@ -451,6 +600,9 @@ public class ObjectEntryFolderSerDes {
 			else if (Objects.equals(jsonParserFieldName, "dateModified")) {
 				return false;
 			}
+			else if (Objects.equals(jsonParserFieldName, "description")) {
+				return false;
+			}
 			else if (Objects.equals(
 						jsonParserFieldName, "externalReferenceCode")) {
 
@@ -491,7 +643,25 @@ public class ObjectEntryFolderSerDes {
 
 				return false;
 			}
+			else if (Objects.equals(jsonParserFieldName, "permissions")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "removedBy")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "removedDate")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "scope")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "scopeId")) {
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "scopeKey")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "status")) {
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "title")) {
@@ -531,6 +701,12 @@ public class ObjectEntryFolderSerDes {
 				if (jsonParserFieldValue != null) {
 					objectEntryFolder.setDateModified(
 						toDate((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "description")) {
+				if (jsonParserFieldValue != null) {
+					objectEntryFolder.setDescription(
+						(String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(
@@ -601,9 +777,59 @@ public class ObjectEntryFolderSerDes {
 						Long.valueOf((String)jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "permissions")) {
+				if (jsonParserFieldValue != null) {
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					com.liferay.headless.object.client.permission.Permission[]
+						permissionsArray = new
+						com.liferay.headless.object.client.permission.Permission
+							[jsonParserFieldValues.length];
+
+					for (int i = 0; i < permissionsArray.length; i++) {
+						permissionsArray[i] =
+							com.liferay.headless.object.client.permission.
+								Permission.toDTO(
+									(String)jsonParserFieldValues[i]);
+					}
+
+					objectEntryFolder.setPermissions(permissionsArray);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "removedBy")) {
+				if (jsonParserFieldValue != null) {
+					objectEntryFolder.setRemovedBy(
+						CreatorSerDes.toDTO((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "removedDate")) {
+				if (jsonParserFieldValue != null) {
+					objectEntryFolder.setRemovedDate(
+						toDate((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "scope")) {
+				if (jsonParserFieldValue != null) {
+					objectEntryFolder.setScope(
+						ScopeSerDes.toDTO((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "scopeId")) {
+				if (jsonParserFieldValue != null) {
+					objectEntryFolder.setScopeId(
+						Long.valueOf((String)jsonParserFieldValue));
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "scopeKey")) {
 				if (jsonParserFieldValue != null) {
 					objectEntryFolder.setScopeKey((String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "status")) {
+				if (jsonParserFieldValue != null) {
+					objectEntryFolder.setStatus(
+						StatusSerDes.toDTO((String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "title")) {

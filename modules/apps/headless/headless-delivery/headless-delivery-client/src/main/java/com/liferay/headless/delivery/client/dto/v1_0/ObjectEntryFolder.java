@@ -8,13 +8,13 @@ package com.liferay.headless.object.client.dto.v1_0;
 import com.liferay.headless.object.client.function.UnsafeSupplier;
 import com.liferay.headless.object.client.serdes.v1_0.ObjectEntryFolderSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Alicia García
@@ -111,6 +111,27 @@ public class ObjectEntryFolder implements Cloneable, Serializable {
 	}
 
 	protected Date dateModified;
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	public void setDescription(
+		UnsafeSupplier<String, Exception> descriptionUnsafeSupplier) {
+
+		try {
+			description = descriptionUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String description;
 
 	public String getExternalReferenceCode() {
 		return externalReferenceCode;
@@ -317,6 +338,117 @@ public class ObjectEntryFolder implements Cloneable, Serializable {
 
 	protected Long parentObjectEntryFolderId;
 
+	public com.liferay.headless.object.client.permission.Permission[]
+		getPermissions() {
+
+		return permissions;
+	}
+
+	public void setPermissions(
+		com.liferay.headless.object.client.permission.Permission[]
+			permissions) {
+
+		this.permissions = permissions;
+	}
+
+	public void setPermissions(
+		UnsafeSupplier
+			<com.liferay.headless.object.client.permission.Permission[],
+			 Exception> permissionsUnsafeSupplier) {
+
+		try {
+			permissions = permissionsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected com.liferay.headless.object.client.permission.Permission[]
+		permissions;
+
+	public Creator getRemovedBy() {
+		return removedBy;
+	}
+
+	public void setRemovedBy(Creator removedBy) {
+		this.removedBy = removedBy;
+	}
+
+	public void setRemovedBy(
+		UnsafeSupplier<Creator, Exception> removedByUnsafeSupplier) {
+
+		try {
+			removedBy = removedByUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Creator removedBy;
+
+	public Date getRemovedDate() {
+		return removedDate;
+	}
+
+	public void setRemovedDate(Date removedDate) {
+		this.removedDate = removedDate;
+	}
+
+	public void setRemovedDate(
+		UnsafeSupplier<Date, Exception> removedDateUnsafeSupplier) {
+
+		try {
+			removedDate = removedDateUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Date removedDate;
+
+	public Scope getScope() {
+		return scope;
+	}
+
+	public void setScope(Scope scope) {
+		this.scope = scope;
+	}
+
+	public void setScope(UnsafeSupplier<Scope, Exception> scopeUnsafeSupplier) {
+		try {
+			scope = scopeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Scope scope;
+
+	public Long getScopeId() {
+		return scopeId;
+	}
+
+	public void setScopeId(Long scopeId) {
+		this.scopeId = scopeId;
+	}
+
+	public void setScopeId(
+		UnsafeSupplier<Long, Exception> scopeIdUnsafeSupplier) {
+
+		try {
+			scopeId = scopeIdUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Long scopeId;
+
 	public String getScopeKey() {
 		return scopeKey;
 	}
@@ -337,6 +469,27 @@ public class ObjectEntryFolder implements Cloneable, Serializable {
 	}
 
 	protected String scopeKey;
+
+	public Status getStatus() {
+		return status;
+	}
+
+	public void setStatus(Status status) {
+		this.status = status;
+	}
+
+	public void setStatus(
+		UnsafeSupplier<Status, Exception> statusUnsafeSupplier) {
+
+		try {
+			status = statusUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Status status;
 
 	public String getTitle() {
 		return title;
