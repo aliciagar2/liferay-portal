@@ -17,15 +17,16 @@ import com.liferay.depot.constants.DepotConstants;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryLocalServiceUtil;
 import com.liferay.headless.asset.library.client.dto.v1_0.AssetLibrary;
+import com.liferay.headless.asset.library.client.dto.v1_0.Role;
 import com.liferay.headless.asset.library.client.http.HttpInvoker;
 import com.liferay.headless.asset.library.client.pagination.Page;
 import com.liferay.headless.asset.library.client.pagination.Pagination;
+import com.liferay.headless.asset.library.client.permission.Permission;
 import com.liferay.headless.asset.library.client.resource.v1_0.AssetLibraryResource;
 import com.liferay.headless.asset.library.client.serdes.v1_0.AssetLibrarySerDes;
 import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
 import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
 import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
-import com.liferay.oauth2.provider.scope.ScopeChecker;
 import com.liferay.petra.function.UnsafeTriConsumer;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
@@ -34,22 +35,19 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.RoleConstants;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
-import com.liferay.portal.kernel.service.GroupLocalService;
-import com.liferay.portal.kernel.service.ResourceActionLocalService;
-import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
-import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.service.UserLocalService;
-import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.RoleTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
@@ -57,26 +55,13 @@ import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
-import com.liferay.portal.util.PropsValues;
-import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
-import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
-import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import jakarta.annotation.Generated;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 import jakarta.ws.rs.core.MultivaluedHashMap;
-import jakarta.ws.rs.core.MultivaluedMap;
-import jakarta.ws.rs.core.PathSegment;
-import jakarta.ws.rs.core.UriBuilder;
-import jakarta.ws.rs.core.UriInfo;
 
 import java.lang.reflect.Method;
-
-import java.net.URI;
 
 import java.text.Format;
 
@@ -87,7 +72,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -100,9 +84,6 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
-import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.mock.web.MockHttpServletResponse;
-
 /**
  * @author Roberto Díaz
  * @generated
@@ -112,10 +93,8 @@ public abstract class BaseAssetLibraryResourceTestCase {
 
 	@ClassRule
 	@Rule
-	public static final AggregateTestRule aggregateTestRule =
-		new AggregateTestRule(
-			new LiferayIntegrationTestRule(),
-			PermissionCheckerMethodTestRule.INSTANCE);
+	public static final LiferayIntegrationTestRule liferayIntegrationTestRule =
+		new LiferayIntegrationTestRule();
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
@@ -177,6 +156,18 @@ public abstract class BaseAssetLibraryResourceTestCase {
 			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
+		).build();
+
+		permissionsAssetLibraryResource = AssetLibraryResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).parameter(
+			"nestedFields", "permissions"
 		).build();
 	}
 
@@ -261,14 +252,14 @@ public abstract class BaseAssetLibraryResourceTestCase {
 		assertHttpResponseStatusCode(
 			204,
 			assetLibraryResource.deleteAssetLibraryHttpResponse(
-				assetLibrary.getId()));
+				assetLibrary.getExternalReferenceCode()));
 
 		assertHttpResponseStatusCode(
 			404,
 			assetLibraryResource.getAssetLibraryHttpResponse(
-				assetLibrary.getId()));
+				assetLibrary.getExternalReferenceCode()));
 		assertHttpResponseStatusCode(
-			404, assetLibraryResource.getAssetLibraryHttpResponse(0L));
+			404, assetLibraryResource.getAssetLibraryHttpResponse("-"));
 	}
 
 	protected AssetLibrary testDeleteAssetLibrary_addAssetLibrary()
@@ -289,43 +280,7 @@ public abstract class BaseAssetLibraryResourceTestCase {
 		assertHttpResponseStatusCode(
 			404,
 			assetLibraryResource.getAssetLibraryHttpResponse(
-				assetLibrary1.getId()));
-
-		assetLibrary1 = testDeleteAssetLibraryBatch_addAssetLibrary();
-
-		testDeleteAssetLibraryBatch_deleteAssetLibrary(
-			202, null, assetLibrary1.getId());
-
-		assertHttpResponseStatusCode(
-			404,
-			assetLibraryResource.getAssetLibraryHttpResponse(
-				assetLibrary1.getId()));
-
-		assetLibrary1 = testDeleteAssetLibraryBatch_addAssetLibrary();
-		AssetLibrary assetLibrary2 =
-			testDeleteAssetLibraryBatch_addAssetLibrary();
-
-		testDeleteAssetLibraryBatch_deleteAssetLibrary(
-			202, assetLibrary2.getExternalReferenceCode(),
-			assetLibrary1.getId());
-
-		assertHttpResponseStatusCode(
-			404,
-			assetLibraryResource.getAssetLibraryHttpResponse(
-				assetLibrary1.getId()));
-		assertHttpResponseStatusCode(
-			200,
-			assetLibraryResource.getAssetLibraryHttpResponse(
-				assetLibrary2.getId()));
-
-		testDeleteAssetLibraryBatch_deleteAssetLibrary(
-			202, assetLibrary2.getExternalReferenceCode(),
-			assetLibrary1.getId());
-
-		assertHttpResponseStatusCode(
-			404,
-			assetLibraryResource.getAssetLibraryHttpResponse(
-				assetLibrary2.getId()));
+				assetLibrary1.getExternalReferenceCode()));
 	}
 
 	protected AssetLibrary testDeleteAssetLibraryBatch_addAssetLibrary()
@@ -356,62 +311,6 @@ public abstract class BaseAssetLibraryResourceTestCase {
 	}
 
 	@Test
-	public void testDeleteAssetLibraryByExternalReferenceCode()
-		throws Exception {
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		AssetLibrary assetLibrary =
-			testDeleteAssetLibraryByExternalReferenceCode_addAssetLibrary();
-
-		assertHttpResponseStatusCode(
-			204,
-			assetLibraryResource.
-				deleteAssetLibraryByExternalReferenceCodeHttpResponse(
-					assetLibrary.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			assetLibraryResource.
-				getAssetLibraryByExternalReferenceCodeHttpResponse(
-					assetLibrary.getExternalReferenceCode()));
-		assertHttpResponseStatusCode(
-			404,
-			assetLibraryResource.
-				getAssetLibraryByExternalReferenceCodeHttpResponse("-"));
-	}
-
-	protected AssetLibrary
-			testDeleteAssetLibraryByExternalReferenceCode_addAssetLibrary()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testDeleteAssetLibraryByExternalReferenceCodePin()
-		throws Exception {
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		AssetLibrary assetLibrary =
-			testDeleteAssetLibraryByExternalReferenceCodePin_addAssetLibrary();
-
-		assertHttpResponseStatusCode(
-			204,
-			assetLibraryResource.
-				deleteAssetLibraryByExternalReferenceCodePinHttpResponse(
-					assetLibrary.getExternalReferenceCode()));
-	}
-
-	protected AssetLibrary
-			testDeleteAssetLibraryByExternalReferenceCodePin_addAssetLibrary()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testDeleteAssetLibraryPin() throws Exception {
 		@SuppressWarnings("PMD.UnusedLocalVariable")
 		AssetLibrary assetLibrary = testDeleteAssetLibraryPin_addAssetLibrary();
@@ -419,7 +318,7 @@ public abstract class BaseAssetLibraryResourceTestCase {
 		assertHttpResponseStatusCode(
 			204,
 			assetLibraryResource.deleteAssetLibraryPinHttpResponse(
-				assetLibrary.getId()));
+				assetLibrary.getExternalReferenceCode()));
 	}
 
 	protected AssetLibrary testDeleteAssetLibraryPin_addAssetLibrary()
@@ -451,9 +350,22 @@ public abstract class BaseAssetLibraryResourceTestCase {
 		assertContains(assetLibrary2, (List<AssetLibrary>)page.getItems());
 		assertValid(page, testGetAssetLibrariesPage_getExpectedActions());
 
-		assetLibraryResource.deleteAssetLibrary(assetLibrary1.getId());
+		for (AssetLibrary assetLibrary : page.getItems()) {
+			Assert.assertNull(assetLibrary.getPermissions());
+		}
 
-		assetLibraryResource.deleteAssetLibrary(assetLibrary2.getId());
+		page = permissionsAssetLibraryResource.getAssetLibrariesPage(
+			null, null, null, Pagination.of(1, 10), null);
+
+		for (AssetLibrary assetLibrary : page.getItems()) {
+			Assert.assertNotNull(assetLibrary.getPermissions());
+		}
+
+		assetLibraryResource.deleteAssetLibrary(
+			assetLibrary1.getExternalReferenceCode());
+
+		assetLibraryResource.deleteAssetLibrary(
+			assetLibrary2.getExternalReferenceCode());
 	}
 
 	protected Map<String, Map<String, String>>
@@ -818,9 +730,11 @@ public abstract class BaseAssetLibraryResourceTestCase {
 		assertValid(
 			page, testGetAssetLibrariesPinnedByMePage_getExpectedActions());
 
-		assetLibraryResource.deleteAssetLibrary(assetLibrary1.getId());
+		assetLibraryResource.deleteAssetLibrary(
+			assetLibrary1.getExternalReferenceCode());
 
-		assetLibraryResource.deleteAssetLibrary(assetLibrary2.getId());
+		assetLibraryResource.deleteAssetLibrary(
+			assetLibrary2.getExternalReferenceCode());
 	}
 
 	protected Map<String, Map<String, String>>
@@ -932,199 +846,17 @@ public abstract class BaseAssetLibraryResourceTestCase {
 		AssetLibrary postAssetLibrary = testGetAssetLibrary_addAssetLibrary();
 
 		AssetLibrary getAssetLibrary = assetLibraryResource.getAssetLibrary(
-			postAssetLibrary.getId());
+			postAssetLibrary.getExternalReferenceCode());
 
 		assertEquals(postAssetLibrary, getAssetLibrary);
 		assertValid(getAssetLibrary);
-	}
 
-	@Test
-	public void testVulcanCRUDItemDelegateGetItem() throws Exception {
-		AssetLibrary postAssetLibrary = testGetAssetLibrary_addAssetLibrary();
+		Assert.assertNull(getAssetLibrary.getPermissions());
 
-		AssetLibrary getAssetLibrary = assetLibraryResource.getAssetLibrary(
-			postAssetLibrary.getId());
+		getAssetLibrary = permissionsAssetLibraryResource.getAssetLibrary(
+			postAssetLibrary.getExternalReferenceCode());
 
-		VulcanCRUDItemDelegate vulcanCRUDItemDelegate =
-			_vulcanCRUDItemDelegateBuilderRegistry.builder(
-				testCompany,
-				"com.liferay.headless.asset.library.dto.v1_0.AssetLibrary"
-			).acceptLanguage(
-				new AcceptLanguage() {
-
-					@Override
-					public List<Locale> getLocales() {
-						return Arrays.asList(LocaleUtil.getDefault());
-					}
-
-					@Override
-					public String getPreferredLanguageId() {
-						return LocaleUtil.toLanguageId(LocaleUtil.getDefault());
-					}
-
-					@Override
-					public Locale getPreferredLocale() {
-						return LocaleUtil.getDefault();
-					}
-
-				}
-			).groupLocalService(
-				_groupLocalService
-			).httpServletRequest(
-				testVulcanCRUDItemDelegate_getHttpServletRequest()
-			).httpServletResponse(
-				new MockHttpServletResponse()
-			).resourceActionLocalService(
-				_resourceActionLocalService
-			).resourcePermissionLocalService(
-				_resourcePermissionLocalService
-			).roleLocalService(
-				_roleLocalService
-			).scopeChecker(
-				_scopeChecker
-			).uriInfo(
-				testVulcanCRUDItemDelegate_getUriInfo()
-			).user(
-				testVulcanCRUDItemDelegate_getUser()
-			).build();
-
-		Object item = vulcanCRUDItemDelegate.getItem(postAssetLibrary.getId());
-
-		assertEquals(
-			getAssetLibrary, AssetLibrarySerDes.toDTO(item.toString()));
-	}
-
-	protected HttpServletRequest
-		testVulcanCRUDItemDelegate_getHttpServletRequest() {
-
-		return new MockHttpServletRequest() {
-
-			@Override
-			public StringBuffer getRequestURL() {
-				return new StringBuffer(
-					StringBundler.concat(
-						"http://localhost:8080/o/v1.0/",
-						RandomTestUtil.randomString(), "/",
-						RandomTestUtil.randomString()));
-			}
-
-		};
-	}
-
-	protected UriInfo testVulcanCRUDItemDelegate_getUriInfo() {
-		String applicationPath = RandomTestUtil.randomString() + "/";
-		String resourcePath = RandomTestUtil.randomString();
-
-		return new UriInfo() {
-
-			@Override
-			public String getPath() {
-				return resourcePath;
-			}
-
-			@Override
-			public String getPath(boolean decode) {
-				return getPath();
-			}
-
-			@Override
-			public List<PathSegment> getPathSegments() {
-				return Collections.emptyList();
-			}
-
-			@Override
-			public List<PathSegment> getPathSegments(boolean decode) {
-				return getPathSegments();
-			}
-
-			@Override
-			public URI getRequestUri() {
-				return URI.create(
-					"http://localhost:8080/o/" + applicationPath +
-						resourcePath);
-			}
-
-			@Override
-			public UriBuilder getRequestUriBuilder() {
-				return UriBuilder.fromUri(getRequestUri());
-			}
-
-			@Override
-			public URI getAbsolutePath() {
-				return getRequestUri();
-			}
-
-			@Override
-			public UriBuilder getAbsolutePathBuilder() {
-				return getRequestUriBuilder();
-			}
-
-			@Override
-			public URI getBaseUri() {
-				return URI.create("http://localhost:8080/o/" + applicationPath);
-			}
-
-			@Override
-			public UriBuilder getBaseUriBuilder() {
-				return UriBuilder.fromUri(getBaseUri());
-			}
-
-			@Override
-			public MultivaluedMap<String, String> getPathParameters() {
-				return new MultivaluedHashMap<>();
-			}
-
-			@Override
-			public MultivaluedMap<String, String> getPathParameters(
-				boolean decode) {
-
-				return getPathParameters();
-			}
-
-			@Override
-			public MultivaluedMap<String, String> getQueryParameters() {
-				return new MultivaluedHashMap<>();
-			}
-
-			@Override
-			public MultivaluedMap<String, String> getQueryParameters(
-				boolean decode) {
-
-				return getQueryParameters();
-			}
-
-			@Override
-			public List<String> getMatchedURIs() {
-				return Collections.emptyList();
-			}
-
-			@Override
-			public List<String> getMatchedURIs(boolean decode) {
-				return getMatchedURIs();
-			}
-
-			@Override
-			public List<Object> getMatchedResources() {
-				return Collections.emptyList();
-			}
-
-			@Override
-			public URI resolve(URI requestUri) {
-				return getBaseUri().resolve(requestUri);
-			}
-
-			@Override
-			public URI relativize(URI uri) {
-				return getBaseUri().relativize(uri);
-			}
-
-		};
-	}
-
-	protected com.liferay.portal.kernel.model.User
-		testVulcanCRUDItemDelegate_getUser() {
-
-		return _testCompanyAdminUser;
+		Assert.assertNotNull(getAssetLibrary.getPermissions());
 	}
 
 	protected AssetLibrary testGetAssetLibrary_addAssetLibrary()
@@ -1135,20 +867,20 @@ public abstract class BaseAssetLibraryResourceTestCase {
 	}
 
 	@Test
-	public void testGetAssetLibraryByExternalReferenceCode() throws Exception {
+	public void testGetAssetLibraryPermissionsPage() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		AssetLibrary postAssetLibrary =
-			testGetAssetLibraryByExternalReferenceCode_addAssetLibrary();
+			testGetAssetLibraryPermissionsPage_addAssetLibrary();
 
-		AssetLibrary getAssetLibrary =
-			assetLibraryResource.getAssetLibraryByExternalReferenceCode(
-				postAssetLibrary.getExternalReferenceCode());
+		Page<Permission> page =
+			assetLibraryResource.getAssetLibraryPermissionsPage(
+				postAssetLibrary.getExternalReferenceCode(),
+				RoleConstants.GUEST);
 
-		assertEquals(postAssetLibrary, getAssetLibrary);
-		assertValid(getAssetLibrary);
+		Assert.assertNotNull(page);
 	}
 
-	protected AssetLibrary
-			testGetAssetLibraryByExternalReferenceCode_addAssetLibrary()
+	protected AssetLibrary testGetAssetLibraryPermissionsPage_addAssetLibrary()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -1163,7 +895,8 @@ public abstract class BaseAssetLibraryResourceTestCase {
 
 		@SuppressWarnings("PMD.UnusedLocalVariable")
 		AssetLibrary patchAssetLibrary = assetLibraryResource.patchAssetLibrary(
-			postAssetLibrary.getId(), randomPatchAssetLibrary);
+			postAssetLibrary.getExternalReferenceCode(),
+			randomPatchAssetLibrary);
 
 		AssetLibrary expectedPatchAssetLibrary = postAssetLibrary.clone();
 
@@ -1171,49 +904,13 @@ public abstract class BaseAssetLibraryResourceTestCase {
 			randomPatchAssetLibrary, expectedPatchAssetLibrary);
 
 		AssetLibrary getAssetLibrary = assetLibraryResource.getAssetLibrary(
-			testDepotEntry.getDepotEntryId());
+			patchAssetLibrary.getExternalReferenceCode());
 
 		assertEquals(expectedPatchAssetLibrary, getAssetLibrary);
 		assertValid(getAssetLibrary);
 	}
 
 	protected AssetLibrary testPatchAssetLibrary_addAssetLibrary()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testPatchAssetLibraryByExternalReferenceCode()
-		throws Exception {
-
-		AssetLibrary postAssetLibrary =
-			testPatchAssetLibraryByExternalReferenceCode_addAssetLibrary();
-
-		AssetLibrary randomPatchAssetLibrary = randomPatchAssetLibrary();
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		AssetLibrary patchAssetLibrary =
-			assetLibraryResource.patchAssetLibraryByExternalReferenceCode(
-				postAssetLibrary.getExternalReferenceCode(),
-				randomPatchAssetLibrary);
-
-		AssetLibrary expectedPatchAssetLibrary = postAssetLibrary.clone();
-
-		BeanTestUtil.copyProperties(
-			randomPatchAssetLibrary, expectedPatchAssetLibrary);
-
-		AssetLibrary getAssetLibrary =
-			assetLibraryResource.getAssetLibraryByExternalReferenceCode(
-				patchAssetLibrary.getExternalReferenceCode());
-
-		assertEquals(expectedPatchAssetLibrary, getAssetLibrary);
-		assertValid(getAssetLibrary);
-	}
-
-	protected AssetLibrary
-			testPatchAssetLibraryByExternalReferenceCode_addAssetLibrary()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -1229,6 +926,24 @@ public abstract class BaseAssetLibraryResourceTestCase {
 
 		assertEquals(randomAssetLibrary, postAssetLibrary);
 		assertValid(postAssetLibrary);
+
+		AssetLibrary randomPermissionsAssetLibrary1 =
+			randomPermissionsAssetLibrary();
+
+		AssetLibrary postPermissionsAssetLibrary1 =
+			testPostAssetLibrary_addAssetLibrary(
+				randomPermissionsAssetLibrary1);
+
+		Assert.assertNull(postPermissionsAssetLibrary1.getPermissions());
+
+		AssetLibrary randomPermissionsAssetLibrary2 =
+			randomPermissionsAssetLibrary();
+
+		AssetLibrary postPermissionsAssetLibrary2 =
+			testPostAssetLibrary_addPermissionsAssetLibrary(
+				randomPermissionsAssetLibrary2);
+
+		Assert.assertNotNull(postPermissionsAssetLibrary2.getPermissions());
 	}
 
 	protected AssetLibrary testPostAssetLibrary_addAssetLibrary(
@@ -1239,98 +954,98 @@ public abstract class BaseAssetLibraryResourceTestCase {
 			"This method needs to be implemented");
 	}
 
+	protected AssetLibrary testPostAssetLibrary_addPermissionsAssetLibrary(
+			AssetLibrary assetLibrary)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
 	@Test
-	public void testPutAssetLibraryByExternalReferenceCode() throws Exception {
-		AssetLibrary postAssetLibrary =
-			testPutAssetLibraryByExternalReferenceCode_addAssetLibrary();
+	public void testPutAssetLibrary() throws Exception {
+		AssetLibrary postAssetLibrary = testPutAssetLibrary_addAssetLibrary();
 
 		AssetLibrary randomAssetLibrary = randomAssetLibrary();
 
-		AssetLibrary putAssetLibrary =
-			assetLibraryResource.putAssetLibraryByExternalReferenceCode(
-				postAssetLibrary.getExternalReferenceCode(),
-				randomAssetLibrary);
+		AssetLibrary putAssetLibrary = assetLibraryResource.putAssetLibrary(
+			postAssetLibrary.getExternalReferenceCode(), randomAssetLibrary);
 
 		assertEquals(randomAssetLibrary, putAssetLibrary);
 		assertValid(putAssetLibrary);
 
-		AssetLibrary getAssetLibrary =
-			assetLibraryResource.getAssetLibraryByExternalReferenceCode(
-				putAssetLibrary.getExternalReferenceCode());
+		Assert.assertNull(putAssetLibrary.getPermissions());
 
-		assertEquals(randomAssetLibrary, getAssetLibrary);
-		assertValid(getAssetLibrary);
-
-		AssetLibrary newAssetLibrary =
-			testPutAssetLibraryByExternalReferenceCode_createAssetLibrary();
-
-		putAssetLibrary =
-			assetLibraryResource.putAssetLibraryByExternalReferenceCode(
-				newAssetLibrary.getExternalReferenceCode(), newAssetLibrary);
-
-		assertEquals(newAssetLibrary, putAssetLibrary);
-		assertValid(putAssetLibrary);
-
-		getAssetLibrary =
-			assetLibraryResource.getAssetLibraryByExternalReferenceCode(
-				putAssetLibrary.getExternalReferenceCode());
-
-		assertEquals(newAssetLibrary, getAssetLibrary);
-
-		Assert.assertEquals(
-			newAssetLibrary.getExternalReferenceCode(),
+		AssetLibrary getAssetLibrary = assetLibraryResource.getAssetLibrary(
 			putAssetLibrary.getExternalReferenceCode());
-	}
-
-	protected AssetLibrary
-			testPutAssetLibraryByExternalReferenceCode_addAssetLibrary()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected AssetLibrary
-			testPutAssetLibraryByExternalReferenceCode_createAssetLibrary()
-		throws Exception {
-
-		return randomAssetLibrary();
-	}
-
-	@Test
-	public void testPutAssetLibraryByExternalReferenceCodePin()
-		throws Exception {
-
-		AssetLibrary postAssetLibrary =
-			testPutAssetLibraryByExternalReferenceCodePin_addAssetLibrary();
-
-		AssetLibrary randomAssetLibrary = randomAssetLibrary();
-
-		AssetLibrary putAssetLibrary =
-			assetLibraryResource.putAssetLibraryByExternalReferenceCodePin(
-				postAssetLibrary.getExternalReferenceCode());
-
-		assertEquals(randomAssetLibrary, putAssetLibrary);
-		assertValid(putAssetLibrary);
-
-		AssetLibrary getAssetLibrary =
-			testPutAssetLibraryByExternalReferenceCodePin_getAssetLibrary(
-				putAssetLibrary.getExternalReferenceCode());
 
 		assertEquals(randomAssetLibrary, getAssetLibrary);
 		assertValid(getAssetLibrary);
+
+		AssetLibrary randomPermissionsAssetLibrary =
+			randomPermissionsAssetLibrary();
+
+		putAssetLibrary = assetLibraryResource.putAssetLibrary(
+			postAssetLibrary.getExternalReferenceCode(),
+			randomPermissionsAssetLibrary);
+
+		assertEquals(randomPermissionsAssetLibrary, putAssetLibrary);
+		assertValid(putAssetLibrary);
+
+		Assert.assertNull(putAssetLibrary.getPermissions());
+
+		putAssetLibrary = permissionsAssetLibraryResource.putAssetLibrary(
+			postAssetLibrary.getExternalReferenceCode(),
+			randomPermissionsAssetLibrary);
+
+		Assert.assertNotNull(putAssetLibrary.getPermissions());
 	}
 
-	protected AssetLibrary
-		testPutAssetLibraryByExternalReferenceCodePin_getAssetLibrary(
-			String externalReferenceCode) {
+	protected AssetLibrary testPutAssetLibrary_addAssetLibrary()
+		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
 
-	protected AssetLibrary
-			testPutAssetLibraryByExternalReferenceCodePin_addAssetLibrary()
+	@Test
+	public void testPutAssetLibraryPermissionsPage() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		AssetLibrary assetLibrary =
+			testPutAssetLibraryPermissionsPage_addAssetLibrary();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		com.liferay.portal.kernel.model.Role role = RoleTestUtil.addRole(
+			RoleConstants.TYPE_REGULAR);
+
+		assertHttpResponseStatusCode(
+			200,
+			assetLibraryResource.putAssetLibraryPermissionsPageHttpResponse(
+				assetLibrary.getExternalReferenceCode(),
+				new Permission[] {
+					new Permission() {
+						{
+							setActionIds(new String[] {"PERMISSIONS"});
+							setRoleName(role.getName());
+						}
+					}
+				}));
+
+		assertHttpResponseStatusCode(
+			404,
+			assetLibraryResource.putAssetLibraryPermissionsPageHttpResponse(
+				assetLibrary.getExternalReferenceCode(),
+				new Permission[] {
+					new Permission() {
+						{
+							setActionIds(new String[] {"-"});
+							setRoleName("-");
+						}
+					}
+				}));
+	}
+
+	protected AssetLibrary testPutAssetLibraryPermissionsPage_addAssetLibrary()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -1345,20 +1060,20 @@ public abstract class BaseAssetLibraryResourceTestCase {
 		AssetLibrary randomAssetLibrary = randomAssetLibrary();
 
 		AssetLibrary putAssetLibrary = assetLibraryResource.putAssetLibraryPin(
-			postAssetLibrary.getId());
+			postAssetLibrary.getExternalReferenceCode());
 
 		assertEquals(randomAssetLibrary, putAssetLibrary);
 		assertValid(putAssetLibrary);
 
 		AssetLibrary getAssetLibrary = testPutAssetLibraryPin_getAssetLibrary(
-			putAssetLibrary.getId());
+			putAssetLibrary.getExternalReferenceCode());
 
 		assertEquals(randomAssetLibrary, getAssetLibrary);
 		assertValid(getAssetLibrary);
 	}
 
 	protected AssetLibrary testPutAssetLibraryPin_getAssetLibrary(
-		Long assetLibraryId) {
+		String assetLibraryExternalReferenceCode) {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
@@ -1377,48 +1092,12 @@ public abstract class BaseAssetLibraryResourceTestCase {
 			testBatchEngineDeleteImportTask_addAssetLibrary();
 
 		testBatchEngineDeleteImportTask_deleteAssetLibrary(
-			200, assetLibrary1.getExternalReferenceCode(), null);
+			200, assetLibrary1.getExternalReferenceCode());
 
 		assertHttpResponseStatusCode(
 			404,
 			assetLibraryResource.getAssetLibraryHttpResponse(
-				assetLibrary1.getId()));
-
-		assetLibrary1 = testBatchEngineDeleteImportTask_addAssetLibrary();
-
-		testBatchEngineDeleteImportTask_deleteAssetLibrary(
-			200, null, assetLibrary1.getId());
-
-		assertHttpResponseStatusCode(
-			404,
-			assetLibraryResource.getAssetLibraryHttpResponse(
-				assetLibrary1.getId()));
-
-		assetLibrary1 = testBatchEngineDeleteImportTask_addAssetLibrary();
-		AssetLibrary assetLibrary2 =
-			testBatchEngineDeleteImportTask_addAssetLibrary();
-
-		testBatchEngineDeleteImportTask_deleteAssetLibrary(
-			200, assetLibrary2.getExternalReferenceCode(),
-			assetLibrary1.getId());
-
-		assertHttpResponseStatusCode(
-			404,
-			assetLibraryResource.getAssetLibraryHttpResponse(
-				assetLibrary1.getId()));
-		assertHttpResponseStatusCode(
-			200,
-			assetLibraryResource.getAssetLibraryHttpResponse(
-				assetLibrary2.getId()));
-
-		testBatchEngineDeleteImportTask_deleteAssetLibrary(
-			200, assetLibrary2.getExternalReferenceCode(),
-			assetLibrary1.getId());
-
-		assertHttpResponseStatusCode(
-			404,
-			assetLibraryResource.getAssetLibraryHttpResponse(
-				assetLibrary2.getId()));
+				assetLibrary1.getExternalReferenceCode()));
 	}
 
 	protected AssetLibrary testBatchEngineDeleteImportTask_addAssetLibrary()
@@ -1428,7 +1107,7 @@ public abstract class BaseAssetLibraryResourceTestCase {
 	}
 
 	protected void testBatchEngineDeleteImportTask_deleteAssetLibrary(
-			int expectedStatusCode, String externalReferenceCode, Long id,
+			int expectedStatusCode, String externalReferenceCode,
 			String... parameters)
 		throws Exception {
 
@@ -1448,10 +1127,7 @@ public abstract class BaseAssetLibraryResourceTestCase {
 				null, null, null, null,
 				JSONUtil.putAll(
 					JSONUtil.put(
-						"externalReferenceCode", () -> externalReferenceCode
-					).put(
-						"id", () -> id
-					)));
+						"externalReferenceCode", () -> externalReferenceCode)));
 
 		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
 
@@ -1550,6 +1226,14 @@ public abstract class BaseAssetLibraryResourceTestCase {
 			valid = false;
 		}
 
+		if (!Objects.equals(
+				assetLibrary.getAssetLibraryKey(),
+				testDepotEntryGroup.getGroupKey()) &&
+			!Objects.equals(assetLibrary.getSiteId(), testGroup.getGroupId())) {
+
+			valid = false;
+		}
+
 		for (String additionalAssertFieldName :
 				getAdditionalAssertFieldNames()) {
 
@@ -1563,14 +1247,6 @@ public abstract class BaseAssetLibraryResourceTestCase {
 
 			if (Objects.equals("assetLibraryKey", additionalAssertFieldName)) {
 				if (assetLibrary.getAssetLibraryKey() == null) {
-					valid = false;
-				}
-
-				continue;
-			}
-
-			if (Objects.equals("connectedSiteId", additionalAssertFieldName)) {
-				if (assetLibrary.getConnectedSiteId() == null) {
 					valid = false;
 				}
 
@@ -1659,6 +1335,14 @@ public abstract class BaseAssetLibraryResourceTestCase {
 					"numberOfUserGroups", additionalAssertFieldName)) {
 
 				if (assetLibrary.getNumberOfUserGroups() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("permissions", additionalAssertFieldName)) {
+				if (assetLibrary.getPermissions() == null) {
 					valid = false;
 				}
 
@@ -1755,6 +1439,12 @@ public abstract class BaseAssetLibraryResourceTestCase {
 	protected List<GraphQLField> getGraphQLFields() throws Exception {
 		List<GraphQLField> graphQLFields = new ArrayList<>();
 
+		graphQLFields.add(new GraphQLField("externalReferenceCode"));
+
+		graphQLFields.add(new GraphQLField("id"));
+
+		graphQLFields.add(new GraphQLField("siteId"));
+
 		for (java.lang.reflect.Field field :
 				getDeclaredFields(
 					com.liferay.headless.asset.library.dto.v1_0.AssetLibrary.
@@ -1820,17 +1510,6 @@ public abstract class BaseAssetLibraryResourceTestCase {
 				if (!equals(
 						(Map)assetLibrary1.getActions(),
 						(Map)assetLibrary2.getActions())) {
-
-					return false;
-				}
-
-				continue;
-			}
-
-			if (Objects.equals("connectedSiteId", additionalAssertFieldName)) {
-				if (!Objects.deepEquals(
-						assetLibrary1.getConnectedSiteId(),
-						assetLibrary2.getConnectedSiteId())) {
 
 					return false;
 				}
@@ -1980,6 +1659,17 @@ public abstract class BaseAssetLibraryResourceTestCase {
 				if (!Objects.deepEquals(
 						assetLibrary1.getNumberOfUserGroups(),
 						assetLibrary2.getNumberOfUserGroups())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("permissions", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						assetLibrary1.getPermissions(),
+						assetLibrary2.getPermissions())) {
 
 					return false;
 				}
@@ -2186,11 +1876,6 @@ public abstract class BaseAssetLibraryResourceTestCase {
 			}
 
 			return sb.toString();
-		}
-
-		if (entityFieldName.equals("connectedSiteId")) {
-			throw new IllegalArgumentException(
-				"Invalid entity field " + entityFieldName);
 		}
 
 		if (entityFieldName.equals("connectedSites")) {
@@ -2432,7 +2117,17 @@ public abstract class BaseAssetLibraryResourceTestCase {
 			return sb.toString();
 		}
 
+		if (entityFieldName.equals("permissions")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		if (entityFieldName.equals("settings")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("siteId")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
 		}
@@ -2499,7 +2194,6 @@ public abstract class BaseAssetLibraryResourceTestCase {
 			{
 				assetLibraryKey = String.valueOf(
 					testDepotEntry.getDepotEntryId());
-				connectedSiteId = RandomTestUtil.randomLong();
 				creatorUserId = RandomTestUtil.randomLong();
 				dateCreated = RandomTestUtil.nextDate();
 				dateModified = RandomTestUtil.nextDate();
@@ -2512,6 +2206,7 @@ public abstract class BaseAssetLibraryResourceTestCase {
 				numberOfConnectedSites = RandomTestUtil.randomInt();
 				numberOfUserAccounts = RandomTestUtil.randomInt();
 				numberOfUserGroups = RandomTestUtil.randomInt();
+				siteId = testGroup.getGroupId();
 			}
 		};
 	}
@@ -2522,11 +2217,32 @@ public abstract class BaseAssetLibraryResourceTestCase {
 		randomIrrelevantAssetLibrary.setAssetLibraryKey(
 			String.valueOf(irrelevantDepotEntry.getDepotEntryId()));
 
+		randomIrrelevantAssetLibrary.setSiteId(irrelevantGroup.getGroupId());
+
 		return randomIrrelevantAssetLibrary;
 	}
 
 	protected AssetLibrary randomPatchAssetLibrary() throws Exception {
 		return randomAssetLibrary();
+	}
+
+	protected AssetLibrary randomPermissionsAssetLibrary() throws Exception {
+		AssetLibrary assetLibrary = randomAssetLibrary();
+
+		com.liferay.portal.kernel.model.Role role = RoleTestUtil.addRole(
+			RoleConstants.TYPE_REGULAR);
+
+		assetLibrary.setPermissions(
+			new Permission[] {
+				new Permission() {
+					{
+						setActionIds(new String[] {"VIEW"});
+						setRoleName(role.getName());
+					}
+				}
+			});
+
+		return assetLibrary;
 	}
 
 	protected final JSONObject waitForFinish(
@@ -2554,6 +2270,7 @@ public abstract class BaseAssetLibraryResourceTestCase {
 	protected AssetLibraryResource assetLibraryResource;
 	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected AssetLibraryResource permissionsAssetLibraryResource;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected DepotEntry irrelevantDepotEntry;
 	protected com.liferay.portal.kernel.model.Group irrelevantDepotEntryGroup;
@@ -2765,27 +2482,5 @@ public abstract class BaseAssetLibraryResourceTestCase {
 	private
 		com.liferay.headless.asset.library.resource.v1_0.AssetLibraryResource
 			_assetLibraryResource;
-
-	@Inject
-	private GroupLocalService _groupLocalService;
-
-	@Inject
-	private ResourceActionLocalService _resourceActionLocalService;
-
-	@Inject
-	private ResourcePermissionLocalService _resourcePermissionLocalService;
-
-	@Inject
-	private RoleLocalService _roleLocalService;
-
-	@Inject
-	private ScopeChecker _scopeChecker;
-
-	@Inject
-	private UserLocalService _userLocalService;
-
-	@Inject
-	private VulcanCRUDItemDelegateBuilderRegistry
-		_vulcanCRUDItemDelegateBuilderRegistry;
 
 }
