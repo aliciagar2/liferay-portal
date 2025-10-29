@@ -11,6 +11,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.test.rule.FeatureFlag;
+import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.util.ArrayList;
@@ -24,7 +25,9 @@ import org.junit.runner.RunWith;
 /**
  * @author Roberto Díaz
  */
-@FeatureFlag("LPD-17564")
+@FeatureFlags(
+	featureFlags = {@FeatureFlag("LPD-17564"), @FeatureFlag("LPD-32050")}
+)
 @RunWith(Arquillian.class)
 public class ConnectedSiteResourceTest
 	extends BaseConnectedSiteResourceTestCase {
@@ -95,17 +98,18 @@ public class ConnectedSiteResourceTest
 	@Override
 	protected ConnectedSite
 			testGetAssetLibraryConnectedSitesPage_addConnectedSite(
-				String externalReferenceCode, ConnectedSite connectedSite)
+				String assetLibraryExternalReferenceCode,
+				ConnectedSite connectedSite)
 		throws Exception {
 
 		return connectedSiteResource.putAssetLibraryConnectedSite(
-			testGetAssetLibraryConnectedSitesPage_getExternalReferenceCode(),
-			connectedSite.getExternalReferenceCode(), new ConnectedSite());
+			assetLibraryExternalReferenceCode,
+			connectedSite.getExternalReferenceCode(), connectedSite);
 	}
 
 	@Override
 	protected String
-			testGetAssetLibraryConnectedSitesPage_getExternalReferenceCode()
+			testGetAssetLibraryConnectedSitesPage_getAssetLibraryExternalReferenceCode()
 		throws Exception {
 
 		Group group = testDepotEntry.getGroup();
