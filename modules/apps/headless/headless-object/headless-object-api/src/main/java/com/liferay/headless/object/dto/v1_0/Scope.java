@@ -3,14 +3,11 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-package com.liferay.headless.object.dto.v1_0;
+package com.liferay.headless.admin.taxonomy.dto.v1_0;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFilter;
-import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonValue;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
@@ -34,24 +31,26 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 /**
- * @author Alicia García
+ * @author Javier Gamarra
  * @generated
  */
 @Generated("")
-@GraphQLName("Scope")
+@GraphQLName("AssetLibrary")
 @JsonFilter("Liferay.Vulcan")
-@XmlRootElement(name = "Scope")
-public class Scope implements Serializable {
+@XmlRootElement(name = "AssetLibrary")
+public class AssetLibrary implements Serializable {
 
-	public static Scope toDTO(String json) {
-		return ObjectMapperUtil.readValue(Scope.class, json);
+	public static AssetLibrary toDTO(String json) {
+		return ObjectMapperUtil.readValue(AssetLibrary.class, json);
 	}
 
-	public static Scope unsafeToDTO(String json) {
-		return ObjectMapperUtil.unsafeReadValue(Scope.class, json);
+	public static AssetLibrary unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(AssetLibrary.class, json);
 	}
 
-	@io.swagger.v3.oas.annotations.media.Schema
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The asset library's external reference code."
+	)
 	public String getExternalReferenceCode() {
 		if (_externalReferenceCodeSupplier != null) {
 			externalReferenceCode = _externalReferenceCodeSupplier.get();
@@ -85,48 +84,37 @@ public class Scope implements Serializable {
 		};
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The asset library's external reference code.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String externalReferenceCode;
 
 	@JsonIgnore
 	private Supplier<String> _externalReferenceCodeSupplier;
 
-	@io.swagger.v3.oas.annotations.media.Schema
-	@JsonGetter("type")
-	@Valid
-	public Type getType() {
-		if (_typeSupplier != null) {
-			type = _typeSupplier.get();
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The asset library's site ID."
+	)
+	public Long getId() {
+		if (_idSupplier != null) {
+			id = _idSupplier.get();
 
-			_typeSupplier = null;
+			_idSupplier = null;
 		}
 
-		return type;
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+
+		_idSupplier = null;
 	}
 
 	@JsonIgnore
-	public String getTypeAsString() {
-		Type type = getType();
-
-		if (type == null) {
-			return null;
-		}
-
-		return type.toString();
-	}
-
-	public void setType(Type type) {
-		this.type = type;
-
-		_typeSupplier = null;
-	}
-
-	@JsonIgnore
-	public void setType(UnsafeSupplier<Type, Exception> typeUnsafeSupplier) {
-		_typeSupplier = () -> {
+	public void setId(UnsafeSupplier<Long, Exception> idUnsafeSupplier) {
+		_idSupplier = () -> {
 			try {
-				return typeUnsafeSupplier.get();
+				return idUnsafeSupplier.get();
 			}
 			catch (RuntimeException runtimeException) {
 				throw runtimeException;
@@ -137,12 +125,141 @@ public class Scope implements Serializable {
 		};
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The asset library's site ID.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected Type type;
+	protected Long id;
 
 	@JsonIgnore
-	private Supplier<Type> _typeSupplier;
+	private Supplier<Long> _idSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The asset library's name."
+	)
+	public String getName() {
+		if (_nameSupplier != null) {
+			name = _nameSupplier.get();
+
+			_nameSupplier = null;
+		}
+
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+
+		_nameSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setName(UnsafeSupplier<String, Exception> nameUnsafeSupplier) {
+		_nameSupplier = () -> {
+			try {
+				return nameUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(description = "The asset library's name.")
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String name;
+
+	@JsonIgnore
+	private Supplier<String> _nameSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The localized asset library's name."
+	)
+	@Valid
+	public Map<String, String> getName_i18n() {
+		if (_name_i18nSupplier != null) {
+			name_i18n = _name_i18nSupplier.get();
+
+			_name_i18nSupplier = null;
+		}
+
+		return name_i18n;
+	}
+
+	public void setName_i18n(Map<String, String> name_i18n) {
+		this.name_i18n = name_i18n;
+
+		_name_i18nSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setName_i18n(
+		UnsafeSupplier<Map<String, String>, Exception>
+			name_i18nUnsafeSupplier) {
+
+		_name_i18nSupplier = () -> {
+			try {
+				return name_i18nUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(description = "The localized asset library's name.")
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Map<String, String> name_i18n;
+
+	@JsonIgnore
+	private Supplier<Map<String, String>> _name_i18nSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The asset library's scope key."
+	)
+	public String getScopeKey() {
+		if (_scopeKeySupplier != null) {
+			scopeKey = _scopeKeySupplier.get();
+
+			_scopeKeySupplier = null;
+		}
+
+		return scopeKey;
+	}
+
+	public void setScopeKey(String scopeKey) {
+		this.scopeKey = scopeKey;
+
+		_scopeKeySupplier = null;
+	}
+
+	@JsonIgnore
+	public void setScopeKey(
+		UnsafeSupplier<String, Exception> scopeKeyUnsafeSupplier) {
+
+		_scopeKeySupplier = () -> {
+			try {
+				return scopeKeyUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(description = "The asset library's scope key.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String scopeKey;
+
+	@JsonIgnore
+	private Supplier<String> _scopeKeySupplier;
 
 	@Override
 	public boolean equals(Object object) {
@@ -150,13 +267,13 @@ public class Scope implements Serializable {
 			return true;
 		}
 
-		if (!(object instanceof Scope)) {
+		if (!(object instanceof AssetLibrary)) {
 			return false;
 		}
 
-		Scope scope = (Scope)object;
+		AssetLibrary assetLibrary = (AssetLibrary)object;
 
-		return Objects.equals(toString(), scope.toString());
+		return Objects.equals(toString(), assetLibrary.toString());
 	}
 
 	@Override
@@ -187,18 +304,58 @@ public class Scope implements Serializable {
 			sb.append("\"");
 		}
 
-		Type type = getType();
+		Long id = getId();
 
-		if (type != null) {
+		if (id != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"type\": ");
+			sb.append("\"id\": ");
+
+			sb.append(id);
+		}
+
+		String name = getName();
+
+		if (name != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"name\": ");
 
 			sb.append("\"");
 
-			sb.append(type);
+			sb.append(_escape(name));
+
+			sb.append("\"");
+		}
+
+		Map<String, String> name_i18n = getName_i18n();
+
+		if (name_i18n != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"name_i18n\": ");
+
+			sb.append(_toJSON(name_i18n));
+		}
+
+		String scopeKey = getScopeKey();
+
+		if (scopeKey != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"scopeKey\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(scopeKey));
 
 			sb.append("\"");
 		}
@@ -210,48 +367,10 @@ public class Scope implements Serializable {
 
 	@io.swagger.v3.oas.annotations.media.Schema(
 		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
-		defaultValue = "com.liferay.headless.object.dto.v1_0.Scope",
+		defaultValue = "com.liferay.headless.admin.taxonomy.dto.v1_0.AssetLibrary",
 		name = "x-class-name"
 	)
 	public String xClassName;
-
-	@GraphQLName("Type")
-	public static enum Type {
-
-		ASSET_LIBRARY("AssetLibrary"), CMS("CMS"), SITE("Site");
-
-		@JsonCreator
-		public static Type create(String value) {
-			if ((value == null) || value.equals("")) {
-				return null;
-			}
-
-			for (Type type : values()) {
-				if (Objects.equals(type.getValue(), value)) {
-					return type;
-				}
-			}
-
-			throw new IllegalArgumentException("Invalid enum value: " + value);
-		}
-
-		@JsonValue
-		public String getValue() {
-			return _value;
-		}
-
-		@Override
-		public String toString() {
-			return _value;
-		}
-
-		private Type(String value) {
-			_value = value;
-		}
-
-		private final String _value;
-
-	}
 
 	private static String _escape(Object object) {
 		return StringUtil.replace(
