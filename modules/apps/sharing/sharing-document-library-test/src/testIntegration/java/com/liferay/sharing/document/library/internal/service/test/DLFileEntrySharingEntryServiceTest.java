@@ -61,8 +61,6 @@ public class DLFileEntrySharingEntryServiceTest {
 	@Before
 	public void setUp() throws Exception {
 		_group = GroupTestUtil.addGroup();
-		_fromUser = UserTestUtil.addOmniadminUser();
-		_toUser = UserTestUtil.addUser();
 
 		FileEntry fileEntry = _dlAppService.addFileEntry(
 			null, _group.getGroupId(),
@@ -75,7 +73,11 @@ public class DLFileEntrySharingEntryServiceTest {
 
 		_dlFileEntry = (DLFileEntry)fileEntry.getModel();
 
+		_fromUser = UserTestUtil.addOmniadminUser();
+
 		UserTestUtil.setUser(_fromUser);
+
+		_toUser = UserTestUtil.addUser();
 	}
 
 	@Test
@@ -93,18 +95,18 @@ public class DLFileEntrySharingEntryServiceTest {
 		SharingEntry sharingEntry = _addSharingEntry(
 			classNameId, classPK, expirationDate);
 
-		Assert.assertEquals(_group.getCompanyId(), sharingEntry.getCompanyId());
 		Assert.assertEquals(_group.getGroupId(), sharingEntry.getGroupId());
+		Assert.assertEquals(_group.getCompanyId(), sharingEntry.getCompanyId());
 		Assert.assertEquals(_fromUser.getUserId(), sharingEntry.getUserId());
 		Assert.assertEquals(_toUser.getUserId(), sharingEntry.getToUserId());
 		Assert.assertEquals(classNameId, sharingEntry.getClassNameId());
 		Assert.assertEquals(classPK, sharingEntry.getClassPK());
 		Assert.assertTrue(sharingEntry.isShareable());
-		Assert.assertEquals(expirationDate, sharingEntry.getExpirationDate());
 		Assert.assertEquals(
 			SharingEntryAction.DOWNLOAD.getBitwiseValue() |
 			SharingEntryAction.VIEW.getBitwiseValue(),
 			sharingEntry.getActionIds());
+		Assert.assertEquals(expirationDate, sharingEntry.getExpirationDate());
 	}
 
 	@Test
@@ -139,9 +141,9 @@ public class DLFileEntrySharingEntryServiceTest {
 		throws Exception {
 
 		return _sharingEntryService.addSharingEntry(
-			_toUser.getUserId(), classNameId, classPK, _group.getGroupId(),
-			true, Collections.singletonList(SharingEntryAction.VIEW),
-			expirationDate,
+			null, 0, 0, _toUser.getUserId(), classNameId, classPK,
+			_group.getGroupId(), true,
+			Collections.singletonList(SharingEntryAction.VIEW), expirationDate,
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 	}
 
