@@ -96,13 +96,12 @@ public class CollaboratorDTOConverterTest {
 		String emailAddress =
 			StringUtil.toLowerCase(RandomTestUtil.randomString()) +
 				"@liferay.com";
-
 		Date expirationDate = new Date(System.currentTimeMillis() + Time.DAY);
 
 		Ticket ticket = _ticketLocalService.addTicket(
 			TestPropsValues.getCompanyId(), _objectEntry.getModelClassName(),
 			_objectEntry.getObjectEntryId(),
-			TicketConstants.TYPE_INVITE_COLLABORATOR, emailAddress,
+			TicketConstants.TYPE_INVITE_COLLABORATOR, emailAddress, null,
 			expirationDate, null);
 
 		SharingEntry sharingEntry = _sharingEntryLocalService.addSharingEntry(

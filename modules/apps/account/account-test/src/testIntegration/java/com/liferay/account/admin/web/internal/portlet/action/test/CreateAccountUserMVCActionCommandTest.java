@@ -36,6 +36,7 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
@@ -86,14 +87,14 @@ public class CreateAccountUserMVCActionCommandTest {
 
 	@Test
 	@TestInfo("LPD-48130")
-	public void testCreateAccountUserWithInviteCollaboratorTicket()
-		throws Exception {
-
-		String emailAddress = RandomTestUtil.randomString() + "@liferay.com";
+	public void testDoTransactionalCommand() throws Exception {
+		String emailAddress =
+			StringUtil.toLowerCase(RandomTestUtil.randomString()) +
+				"@liferay.com";
 
 		Ticket ticket = _ticketLocalService.addTicket(
 			_company.getCompanyId(), Group.class.getName(), _group.getGroupId(),
-			TicketConstants.TYPE_INVITE_COLLABORATOR, null, emailAddress,
+			TicketConstants.TYPE_INVITE_COLLABORATOR, emailAddress, null,
 			new Date(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(48)),
 			new ServiceContext());
 
@@ -112,16 +113,18 @@ public class CreateAccountUserMVCActionCommandTest {
 		MockLiferayPortletActionRequest mockLiferayPortletActionRequest =
 			_getMockLiferayPortletActionRequest();
 
-		String password = RandomTestUtil.randomString();
-
 		mockLiferayPortletActionRequest.setParameter(
 			"firstName", RandomTestUtil.randomString());
 		mockLiferayPortletActionRequest.setParameter(
 			"languageId", LocaleUtil.toLanguageId(LocaleUtil.getDefault()));
 		mockLiferayPortletActionRequest.setParameter(
 			"lastName", RandomTestUtil.randomString());
+
+		String password = RandomTestUtil.randomString();
+
 		mockLiferayPortletActionRequest.setParameter("password1", password);
 		mockLiferayPortletActionRequest.setParameter("password2", password);
+
 		mockLiferayPortletActionRequest.setParameter(
 			"screenName", RandomTestUtil.randomString());
 		mockLiferayPortletActionRequest.setParameter(
